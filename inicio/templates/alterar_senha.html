@@ -1,0 +1,378 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alterar Senha - Nutra</title>
+  <link rel="stylesheet" href="{% static 'inicio/css/global.css' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      background: #111;
+      color: #fff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .password-page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .password-header {
+      background: linear-gradient(135deg, #185c1b, #0d7a00);
+      color: #fff;
+      padding: 20px 0;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      border-radius: 0 0 20px 20px;
+      box-shadow: 0 4px 15px rgba(24, 92, 27, 0.3);
+      position: relative;
+      margin-bottom: 30px;
+    }
+    
+    .password-header h1 {
+      margin: 0;
+      padding: 0;
+    }
+    
+    .password-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .password-form-container {
+      background: linear-gradient(145deg, #333, #2a2a2a);
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 8px 25px rgba(143, 209, 158, 0.15);
+      border: 1px solid rgba(143, 209, 158, 0.1);
+      width: 100%;
+      max-width: 450px;
+    }
+    
+    .form-group {
+      margin-bottom: 25px;
+    }
+    
+    .form-label {
+      display: block;
+      color: #8fd19e;
+      font-weight: bold;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+    
+    .password-input-container {
+      position: relative;
+    }
+    
+    .form-input {
+      width: 100%;
+      padding: 15px 50px 15px 15px;
+      background: #232323;
+      border: 1px solid #444;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 16px;
+      transition: all 0.3s;
+      box-sizing: border-box;
+      height: 50px;
+    }
+    
+    .form-input:focus {
+      outline: none;
+      border-color: #8fd19e;
+      box-shadow: 0 0 0 2px rgba(143, 209, 158, 0.2);
+    }
+    
+    .form-input::placeholder {
+      color: #666;
+    }
+    
+    .password-toggle-btn {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #888;
+      cursor: pointer;
+      font-size: 18px;
+      transition: color 0.3s;
+      padding: 8px;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .password-toggle-btn:hover {
+      color: #8fd19e;
+      background: rgba(143, 209, 158, 0.1);
+    }
+    
+    .submit-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #4caf50, #388e3c);
+      color: #fff;
+      border: none;
+      padding: 15px;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+      transition: all 0.3s;
+      margin-top: 20px;
+      height: 50px;
+    }
+    
+    .submit-btn:hover {
+      transform: scale(1.02);
+      box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+    }
+    
+    .submit-btn:disabled {
+      background: #666;
+      cursor: not-allowed;
+      transform: scale(1);
+    }
+    
+    .alert {
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      display: none;
+      text-align: center;
+    }
+    
+    .alert.success {
+      background: rgba(76, 175, 80, 0.2);
+      border: 1px solid #4caf50;
+      color: #8fd19e;
+    }
+    
+    .alert.error {
+      background: rgba(244, 67, 54, 0.2);
+      border: 1px solid #f44336;
+      color: #ff6b6b;
+    }
+    
+    .loading {
+      display: none;
+      text-align: center;
+      margin-top: 20px;
+    }
+    
+    .spinner {
+      border: 3px solid #333;
+      border-top: 3px solid #8fd19e;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    @media (max-width: 600px) {
+      .password-header {
+        font-size: 16px;
+        padding: 15px 0;
+      }
+      
+      .password-form-container {
+        padding: 30px 20px;
+        margin: 0 10px;
+      }
+      
+      .form-input {
+        height: 45px;
+        font-size: 15px;
+      }
+      
+      .submit-btn {
+        height: 45px;
+        font-size: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="password-page">
+    <div class="password-header">
+      <a href="{% url 'configuracoes' %}" class="back-btn">
+        <i class="fas fa-arrow-left"></i>
+      </a>
+      <h1>ALTERAR SENHA</h1>
+    </div>
+    
+    <div class="password-container">
+      <div class="password-form-container">
+        <div class="alert success" id="successAlert"></div>
+        <div class="alert error" id="errorAlert"></div>
+        
+        <form id="passwordForm">
+          <div class="form-group">
+            <label class="form-label">Senha Atual</label>
+            <div class="password-input-container">
+              <input type="password" class="form-input" id="currentPassword" placeholder="Digite sua senha atual" required>
+              <button type="button" class="password-toggle-btn" onclick="togglePassword('currentPassword')">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Nova Senha</label>
+            <div class="password-input-container">
+              <input type="password" class="form-input" id="newPassword" placeholder="Digite a nova senha" required>
+              <button type="button" class="password-toggle-btn" onclick="togglePassword('newPassword')">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Confirmar Nova Senha</label>
+            <div class="password-input-container">
+              <input type="password" class="form-input" id="confirmPassword" placeholder="Confirme a nova senha" required>
+              <button type="button" class="password-toggle-btn" onclick="togglePassword('confirmPassword')">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </div>
+          
+          <button type="submit" class="submit-btn" id="submitBtn">
+            Alterar Senha
+          </button>
+        </form>
+        
+        <div class="loading" id="loading">
+          <div class="spinner"></div>
+          <p>Alterando senha...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function togglePassword(inputId) {
+      const input = document.getElementById(inputId);
+      const button = input.nextElementSibling;
+      const icon = button.querySelector('i');
+      
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fas fa-eye-slash';
+      } else {
+        input.type = 'password';
+        icon.className = 'fas fa-eye';
+      }
+    }
+    
+    function showAlert(type, message) {
+      const successAlert = document.getElementById('successAlert');
+      const errorAlert = document.getElementById('errorAlert');
+      
+      // Hide all alerts
+      successAlert.style.display = 'none';
+      errorAlert.style.display = 'none';
+      
+      // Show the appropriate alert
+      if (type === 'success') {
+        successAlert.textContent = message;
+        successAlert.style.display = 'block';
+      } else {
+        errorAlert.textContent = message;
+        errorAlert.style.display = 'block';
+      }
+    }
+    
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+    
+    document.getElementById('passwordForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const currentPassword = document.getElementById('currentPassword').value;
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      const submitBtn = document.getElementById('submitBtn');
+      const loading = document.getElementById('loading');
+      
+      // Hide any existing alerts
+      showAlert('success', '');
+      showAlert('error', '');
+      
+      // Show loading
+      submitBtn.disabled = true;
+      loading.style.display = 'block';
+      
+      try {
+        const response = await fetch('{% url "change_password" %}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify({
+            current_password: currentPassword,
+            new_password: newPassword,
+            confirm_password: confirmPassword
+          })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          showAlert('success', result.message);
+          // Clear form
+          document.getElementById('passwordForm').reset();
+          // Redirect to settings after 2 seconds
+          setTimeout(() => {
+            window.location.href = "{% url 'configuracoes' %}";
+          }, 2000);
+        } else {
+          showAlert('error', result.error);
+        }
+      } catch (error) {
+        showAlert('error', 'Erro ao conectar com o servidor. Tente novamente.');
+      } finally {
+        // Hide loading
+        submitBtn.disabled = false;
+        loading.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>

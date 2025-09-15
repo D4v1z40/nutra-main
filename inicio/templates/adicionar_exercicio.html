@@ -1,0 +1,941 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Adicionar Exercício - Nutra</title>
+  <link rel="stylesheet" href="{% static 'inicio/css/perfil.css' %}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    body {
+      background: #111;
+      color: #fff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .exercise-header {
+      background: linear-gradient(135deg, #0a5e00, #0d7a00);
+      color: #fff;
+      padding: 2rem 0;
+      border-radius: 0 0 20px 20px;
+      box-shadow: 0 4px 15px rgba(10, 94, 0, 0.3);
+      position: relative;
+      min-height: 80px;
+    }
+    
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 0 20px;
+      gap: 20px;
+    }
+    
+    .back-btn {
+      background: #8fd19e;
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      font-size: 18px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+    }
+    
+    .back-btn:hover {
+      background: #7bc08a;
+      transform: scale(1.05);
+    }
+    
+    .header-title {
+      font-size: 20px;
+      font-weight: bold;
+      margin: 0;
+    }
+    
+    .search-bar {
+      background: #232323;
+      border: 1px solid #333;
+      border-radius: 25px;
+      padding: 12px 20px;
+      margin: 20px auto;
+      width: 90%;
+      max-width: 400px;
+      display: flex;
+      align-items: center;
+      color: #fff;
+    }
+    
+    .search-bar input {
+      background: none;
+      border: none;
+      color: #fff;
+      flex: 1;
+      margin-left: 10px;
+      outline: none;
+    }
+    
+    .search-bar input::placeholder {
+      color: #888;
+    }
+    
+    .filter-buttons {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    
+    .filter-btn {
+      background: #232323;
+      border: 1px solid #333;
+      color: #8fd19e;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 14px;
+    }
+    
+    .filter-btn.active {
+      background: #8fd19e;
+      color: #121212;
+    }
+    
+    .muscle-group {
+      margin: 30px 0;
+    }
+    
+    .muscle-title {
+      color: #8fd19e;
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      padding: 0 20px;
+    }
+    
+    .exercise-item {
+      background: #232323;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 15px 20px;
+      margin: 8px 20px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+    }
+    
+    .exercise-item:hover {
+      background: #2a2a2a;
+      border-color: #8fd19e;
+    }
+    
+    .exercise-item.selected {
+      background: linear-gradient(145deg, #2a3a2a, #1e2e1e);
+      border-color: #8fd19e;
+    }
+    
+    .exercise-icon {
+      width: 40px;
+      height: 40px;
+      background: #333;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 15px;
+      color: #8fd19e;
+    }
+    
+    .exercise-info {
+      flex: 1;
+    }
+    
+    .exercise-name {
+      color: #fff;
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    
+    .exercise-muscle {
+      color: #888;
+      font-size: 14px;
+    }
+    
+    .exercise-checkbox {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #8fd19e;
+      border-radius: 50%;
+      background: none;
+      cursor: pointer;
+      position: relative;
+    }
+    
+    .exercise-checkbox.checked {
+      background: #8fd19e;
+    }
+    
+    .exercise-checkbox.checked::after {
+      content: '✓';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #121212;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    
+    .sticky-button-container {
+      position: fixed !important;
+      bottom: 80px !important;
+      left: 0 !important;
+      right: 0 !important;
+      background: transparent;
+      padding: 0;
+      z-index: 1000 !important;
+      pointer-events: none;
+      display: flex !important;
+      justify-content: center;
+      width: 100% !important;
+    }
+    
+    .sticky-button-container .add-exercises-btn {
+      pointer-events: auto;
+    }
+    
+    /* Force sticky button to be always visible */
+    body {
+      padding-bottom: 160px;
+    }
+    
+    .add-exercises-btn {
+      background: linear-gradient(135deg, #4caf50, #388e3c);
+      color: #fff;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(76, 175, 80, 0.2);
+      transition: all 0.3s;
+      max-width: 300px;
+      width: 90%;
+      margin: 20px;
+    }
+    
+    .add-exercises-btn:hover {
+      transform: scale(1.02);
+      box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+    }
+    
+    .add-exercises-btn:disabled {
+      background: #666;
+      cursor: not-allowed;
+      transform: scale(1);
+    }
+    
+    .exercises-container {
+      margin-bottom: 160px; /* Space for sticky button */
+      padding-bottom: 20px;
+    }
+    
+    /* Muscle Filter Modal */
+    .muscle-filter-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .muscle-filter-content {
+      background: #232323;
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 400px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    
+    .muscle-filter-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+    }
+    
+    .muscle-filter-title {
+      color: #8fd19e;
+      font-size: 20px;
+      font-weight: bold;
+      margin: 0;
+    }
+    
+    .close-filter-btn {
+      background: none;
+      border: none;
+      color: #888;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 50%;
+      transition: all 0.3s;
+    }
+    
+    .close-filter-btn:hover {
+      background: #333;
+      color: #fff;
+    }
+    
+    .muscle-option {
+      background: #333;
+      border: 1px solid #444;
+      border-radius: 12px;
+      padding: 15px 20px;
+      margin: 8px 0;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .muscle-option:hover {
+      background: #444;
+      border-color: #8fd19e;
+    }
+    
+    .muscle-option.selected {
+      background: linear-gradient(145deg, #2a3a2a, #1e2e1e);
+      border-color: #8fd19e;
+    }
+    
+    .muscle-option-name {
+      color: #fff;
+      font-size: 16px;
+      font-weight: 500;
+    }
+    
+    .muscle-option-count {
+      color: #8fd19e;
+      font-size: 14px;
+      background: #444;
+      padding: 4px 8px;
+      border-radius: 12px;
+    }
+    
+    .muscle-option.selected .muscle-option-count {
+      background: #8fd19e;
+      color: #121212;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" style="padding-top: 0;">
+    <!-- Header -->
+    <div class="exercise-header">
+      <div class="header-content">
+        <a href="{% url 'montar_treino' %}" class="back-btn">
+          <i class="fas fa-arrow-left"></i>
+        </a>
+        <h1 class="header-title">Adicionar Exercício</h1>
+      </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="search-bar">
+      <i class="fas fa-search" style="color: #888;"></i>
+      <input type="text" placeholder="Procurar exercício" id="searchInput">
+    </div>
+
+    <!-- Filter Buttons -->
+    <div class="filter-buttons">
+      <button class="filter-btn active" onclick="openMuscleFilter()">Todos os Músculos</button>
+    </div>
+
+    <!-- Exercises List -->
+    <div class="exercises-container" id="exercisesList">
+      <!-- Peito -->
+      <div class="muscle-group" data-muscle="peito">
+        <h3 class="muscle-title">Peito</h3>
+        <div class="exercise-item" data-exercise="supino-reto">
+          <div class="exercise-icon"><i class="fas fa-dumbbell"></i></div>
+          <div class="exercise-info">
+            <div class="exercise-name">Supino Reto</div>
+            <div class="exercise-muscle">Peito</div>
+          </div>
+          <div class="exercise-checkbox"></div>
+        </div>
+        <div class="exercise-item" data-exercise="supino-inclinado">
+          <div class="exercise-icon"><i class="fas fa-dumbbell"></i></div>
+          <div class="exercise-info">
+            <div class="exercise-name">Supino Inclinado</div>
+            <div class="exercise-muscle">Peito</div>
+          </div>
+          <div class="exercise-checkbox"></div>
+        </div>
+        <div class="exercise-item" data-exercise="crucifixo">
+          <div class="exercise-icon"><i class="fas fa-dumbbell"></i></div>
+          <div class="exercise-info">
+            <div class="exercise-name">Crucifixo</div>
+            <div class="exercise-muscle">Peito</div>
+          </div>
+          <div class="exercise-checkbox"></div>
+        </div>
+      </div>
+
+      <!-- Ombro -->
+      <div class="muscle-group" data-muscle="ombro">
+        <h3 class="muscle-title">Ombro</h3>
+        <div class="exercise-item" data-exercise="desenvolvimento">
+          <div class="exercise-icon"><i class="fas fa-dumbbell"></i></div>
+          <div class="exercise-info">
+            <div class="exercise-name">Desenvolvimento</div>
+            <div class="exercise-muscle">Ombro</div>
+          </div>
+          <div class="exercise-checkbox"></div>
+        </div>
+        <div class="exercise-item" data-exercise="elevacao-lateral">
+          <div class="exercise-icon"><i class="fas fa-dumbbell"></i></div>
+          <div class="exercise-info">
+            <div class="exercise-name">Elevação Lateral</div>
+            <div class="exercise-muscle">Ombro</div>
+          </div>
+          <div class="exercise-checkbox"></div>
+        </div>
+        <div class="exercise-item" data-exercise="elevacao-frontal">
+          <div class="exercise-icon"><i class="fas fa-dumbbell"></i></div>
+          <div class="exercise-info">
+            <div class="exercise-name">Elevação Frontal</div>
+            <div class="exercise-muscle">Ombro</div>
+          </div>
+          <div class="exercise-checkbox"></div>
+        </div>
+      </div>
+
+      <!-- Tríceps -->
+      <div class="muscle-group" data-muscle="triceps">
+        <h3 class="muscle-title">Tríceps</h3>
+        <div class="exercise-item" data-exercise="triceps-pulley">
+          <div class="exercise-icon"><i class="fas fa-dumbbell"></i></div>
+          <div class="exercise-info">
+            <div class="exercise-name">Tríceps Pulley</div>
+            <div class="exercise-muscle">Tríceps</div>
+          </div>
+          <div class="exercise-checkbox"></div>
+        </div>
+        <div class="exercise-item" data-exercise="triceps-frances">
+          <div class="exercise-icon"><i class="fas fa-dumbbell"></i></div>
+          <div class="exercise-info">
+            <div class="exercise-name">Tríceps Francês</div>
+            <div class="exercise-muscle">Tríceps</div>
+          </div>
+          <div class="exercise-checkbox"></div>
+        </div>
+      </div>
+
+      <!-- Bíceps -->
+      <div class="muscle-group" data-muscle="biceps">
+        <h3 class="muscle-title">Bíceps</h3>
+        <div class="exercise-item" data-exercise="rosca-direta">
+          <div class="exercise-icon"><i class="fas fa-dumbbell"></i></div>
+          <div class="exercise-info">
+            <div class="exercise-name">Rosca Direta</div>
+            <div class="exercise-muscle">Bíceps</div>
+          </div>
+          <div class="exercise-checkbox"></div>
+        </div>
+        <div class="exercise-item" data-exercise="rosca-alternada">
+          <div class="exercise-icon"><i class="fas fa-dumbbell"></i></div>
+          <div class="exercise-info">
+            <div class="exercise-name">Rosca Alternada</div>
+            <div class="exercise-muscle">Bíceps</div>
+          </div>
+          <div class="exercise-checkbox"></div>
+        </div>
+      </div>
+
+      <!-- Costas -->
+      <div class="muscle-group" data-muscle="costas">
+        <h3 class="muscle-title">Costas</h3>
+        <div class="exercise-item" data-exercise="remada-curvada">
+          <div class="exercise-icon"><i class="fas fa-dumbbell"></i></div>
+          <div class="exercise-info">
+            <div class="exercise-name">Remada Curvada</div>
+            <div class="exercise-muscle">Costas</div>
+          </div>
+          <div class="exercise-checkbox"></div>
+        </div>
+        <div class="exercise-item" data-exercise="puxada-frente">
+          <div class="exercise-icon"><i class="fas fa-dumbbell"></i></div>
+          <div class="exercise-info">
+            <div class="exercise-name">Puxada Frente</div>
+            <div class="exercise-muscle">Costas</div>
+          </div>
+          <div class="exercise-checkbox"></div>
+        </div>
+        <div class="exercise-item" data-exercise="puxada-costas">
+          <div class="exercise-icon"><i class="fas fa-dumbbell"></i></div>
+          <div class="exercise-info">
+            <div class="exercise-name">Puxada Costas</div>
+            <div class="exercise-muscle">Costas</div>
+          </div>
+          <div class="exercise-checkbox"></div>
+        </div>
+      </div>
+
+      <!-- Quadríceps -->
+      <div class="muscle-group" data-muscle="quadriceps">
+        <h3 class="muscle-title">Quadríceps</h3>
+        <div class="exercise-item" data-exercise="agachamento">
+          <div class="exercise-icon"><i class="fas fa-dumbbell"></i></div>
+          <div class="exercise-info">
+            <div class="exercise-name">Agachamento</div>
+            <div class="exercise-muscle">Quadríceps</div>
+          </div>
+          <div class="exercise-checkbox"></div>
+        </div>
+        <div class="exercise-item" data-exercise="cadeira-extensora">
+          <div class="exercise-icon"><i class="fas fa-dumbbell"></i></div>
+          <div class="exercise-info">
+            <div class="exercise-name">Cadeira Extensora</div>
+            <div class="exercise-muscle">Quadríceps</div>
+          </div>
+          <div class="exercise-checkbox"></div>
+        </div>
+        <div class="exercise-item" data-exercise="leg-press">
+          <div class="exercise-icon"><i class="fas fa-dumbbell"></i></div>
+          <div class="exercise-info">
+            <div class="exercise-name">Leg Press</div>
+            <div class="exercise-muscle">Quadríceps</div>
+          </div>
+          <div class="exercise-checkbox"></div>
+        </div>
+      </div>
+
+      <!-- Posterior -->
+      <div class="muscle-group" data-muscle="posterior">
+        <h3 class="muscle-title">Posterior</h3>
+        <div class="exercise-item" data-exercise="flexora-deitada">
+          <div class="exercise-icon"><i class="fas fa-dumbbell"></i></div>
+          <div class="exercise-info">
+            <div class="exercise-name">Flexora Deitada</div>
+            <div class="exercise-muscle">Posterior</div>
+          </div>
+          <div class="exercise-checkbox"></div>
+        </div>
+        <div class="exercise-item" data-exercise="stiff">
+          <div class="exercise-icon"><i class="fas fa-dumbbell"></i></div>
+          <div class="exercise-info">
+            <div class="exercise-name">Stiff</div>
+            <div class="exercise-muscle">Posterior</div>
+          </div>
+          <div class="exercise-checkbox"></div>
+        </div>
+      </div>
+
+      <!-- Panturrilha -->
+      <div class="muscle-group" data-muscle="panturrilha">
+        <h3 class="muscle-title">Panturrilha</h3>
+        <div class="exercise-item" data-exercise="gemeos-em-pe">
+          <div class="exercise-icon"><i class="fas fa-dumbbell"></i></div>
+          <div class="exercise-info">
+            <div class="exercise-name">Gêmeos em Pé</div>
+            <div class="exercise-muscle">Panturrilha</div>
+          </div>
+          <div class="exercise-checkbox"></div>
+        </div>
+        <div class="exercise-item" data-exercise="gemeos-sentado">
+          <div class="exercise-icon"><i class="fas fa-dumbbell"></i></div>
+          <div class="exercise-info">
+            <div class="exercise-name">Gêmeos Sentado</div>
+            <div class="exercise-muscle">Panturrilha</div>
+          </div>
+          <div class="exercise-checkbox"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sticky Add Button -->
+  <div class="sticky-button-container">
+    <button class="add-exercises-btn" id="addExercisesBtn" disabled>
+      Adicionar 0 exercícios
+    </button>
+  </div>
+
+  <!-- Muscle Filter Modal -->
+  <div class="muscle-filter-modal" id="muscleFilterModal">
+    <div class="muscle-filter-content">
+      <div class="muscle-filter-header">
+        <h3 class="muscle-filter-title">Filtrar por Músculo</h3>
+        <button class="close-filter-btn" onclick="closeMuscleFilter()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="muscle-option" data-muscle="all" onclick="selectMuscle('all')">
+        <span class="muscle-option-name">Todos os Músculos</span>
+        <span class="muscle-option-count" id="allCount">20</span>
+      </div>
+      
+      <div class="muscle-option" data-muscle="peito" onclick="selectMuscle('peito')">
+        <span class="muscle-option-name">Peito</span>
+        <span class="muscle-option-count" id="peitoCount">3</span>
+      </div>
+      
+      <div class="muscle-option" data-muscle="ombro" onclick="selectMuscle('ombro')">
+        <span class="muscle-option-name">Ombro</span>
+        <span class="muscle-option-count" id="ombroCount">3</span>
+      </div>
+      
+      <div class="muscle-option" data-muscle="triceps" onclick="selectMuscle('triceps')">
+        <span class="muscle-option-name">Tríceps</span>
+        <span class="muscle-option-count" id="tricepsCount">2</span>
+      </div>
+      
+      <div class="muscle-option" data-muscle="biceps" onclick="selectMuscle('biceps')">
+        <span class="muscle-option-name">Bíceps</span>
+        <span class="muscle-option-count" id="bicepsCount">2</span>
+      </div>
+      
+      <div class="muscle-option" data-muscle="costas" onclick="selectMuscle('costas')">
+        <span class="muscle-option-name">Costas</span>
+        <span class="muscle-option-count" id="costasCount">3</span>
+      </div>
+      
+      <div class="muscle-option" data-muscle="quadriceps" onclick="selectMuscle('quadriceps')">
+        <span class="muscle-option-name">Quadríceps</span>
+        <span class="muscle-option-count" id="quadricepsCount">3</span>
+      </div>
+      
+      <div class="muscle-option" data-muscle="posterior" onclick="selectMuscle('posterior')">
+        <span class="muscle-option-name">Posterior</span>
+        <span class="muscle-option-count" id="posteriorCount">2</span>
+      </div>
+      
+      <div class="muscle-option" data-muscle="panturrilha" onclick="selectMuscle('panturrilha')">
+        <span class="muscle-option-name">Panturrilha</span>
+        <span class="muscle-option-count" id="panturrilhaCount">2</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification System -->
+  <div id="notificationContainer" style="position: fixed; top: 20px; right: 20px; z-index: 10000; pointer-events: none;"></div>
+
+  <script>
+    // Notification system
+    function showNotification(message, type = 'info', duration = 3000) {
+      const container = document.getElementById('notificationContainer');
+      const notification = document.createElement('div');
+      
+      notification.className = `notification notification-${type}`;
+      notification.style.cssText = `
+        background: ${type === 'success' ? 'linear-gradient(135deg, #4caf50, #388e3c)' : 
+                      type === 'error' ? 'linear-gradient(135deg, #f44336, #d32f2f)' : 
+                      type === 'warning' ? 'linear-gradient(135deg, #ff9800, #f57c00)' : 
+                      'linear-gradient(135deg, #2196f3, #1976d2)'};
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+        pointer-events: auto;
+        max-width: 300px;
+        font-size: 14px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      `;
+      
+      const icon = document.createElement('i');
+      icon.className = type === 'success' ? 'fas fa-check-circle' :
+                      type === 'error' ? 'fas fa-exclamation-circle' :
+                      type === 'warning' ? 'fas fa-exclamation-triangle' :
+                      'fas fa-info-circle';
+      
+      const text = document.createElement('span');
+      text.textContent = message;
+      
+      notification.appendChild(icon);
+      notification.appendChild(text);
+      container.appendChild(notification);
+      
+      // Animate in
+      setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+      }, 100);
+      
+      // Auto remove
+      setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+          }
+        }, 300);
+      }, duration);
+      
+      // Click to dismiss
+      notification.addEventListener('click', () => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+          }
+        }, 300);
+      });
+    }
+    
+    // Page entrance animation
+    document.addEventListener('DOMContentLoaded', function() {
+      const container = document.querySelector('.container');
+      container.style.opacity = '0';
+      container.style.transform = 'translateY(20px)';
+      
+      setTimeout(() => {
+        container.style.transition = 'all 0.5s ease';
+        container.style.opacity = '1';
+        container.style.transform = 'translateY(0)';
+      }, 100);
+    });
+    
+    let selectedExercises = [];
+
+    // Load previously selected exercises
+    document.addEventListener('DOMContentLoaded', function() {
+      const savedExercises = JSON.parse(localStorage.getItem('selectedExercises') || '[]');
+      selectedExercises = savedExercises;
+      
+      // Mark previously selected exercises as checked
+      selectedExercises.forEach(exerciseId => {
+        const exerciseItem = document.querySelector(`[data-exercise="${exerciseId}"]`);
+        if (exerciseItem) {
+          exerciseItem.classList.add('selected');
+          exerciseItem.querySelector('.exercise-checkbox').classList.add('checked');
+        }
+      });
+      
+      updateAddButton();
+    });
+
+    // Exercise selection
+    document.querySelectorAll('.exercise-item').forEach(item => {
+      item.addEventListener('click', function() {
+        const exerciseId = this.dataset.exercise;
+        const checkbox = this.querySelector('.exercise-checkbox');
+        
+        if (selectedExercises.includes(exerciseId)) {
+          selectedExercises = selectedExercises.filter(id => id !== exerciseId);
+          this.classList.remove('selected');
+          checkbox.classList.remove('checked');
+        } else {
+          selectedExercises.push(exerciseId);
+          this.classList.add('selected');
+          checkbox.classList.add('checked');
+        }
+        
+        updateAddButton();
+      });
+    });
+
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase();
+      document.querySelectorAll('.exercise-item').forEach(item => {
+        const exerciseName = item.querySelector('.exercise-name').textContent.toLowerCase();
+        const exerciseMuscle = item.querySelector('.exercise-muscle').textContent.toLowerCase();
+        
+        if (exerciseName.includes(searchTerm) || exerciseMuscle.includes(searchTerm)) {
+          item.style.display = 'flex';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    });
+
+    function updateAddButton() {
+      const btn = document.getElementById('addExercisesBtn');
+      const count = selectedExercises.length;
+      btn.textContent = `Adicionar ${count} exercício${count !== 1 ? 's' : ''}`;
+      btn.disabled = count === 0;
+    }
+
+    function createWorkout() {
+      if (selectedExercises.length === 0) return;
+      
+      // Load existing workout data if it exists
+      const existingWorkoutData = localStorage.getItem('workoutData');
+      let currentWorkout = null;
+      
+      if (existingWorkoutData) {
+        try {
+          currentWorkout = JSON.parse(existingWorkoutData);
+        } catch (e) {
+          console.log('Error parsing existing workout data:', e);
+        }
+      }
+      
+      // If we have existing workout data, add new exercises to it
+      if (currentWorkout && currentWorkout.exercises) {
+        const exerciseMap = {
+          'supino-reto': { name: 'Supino Reto', muscle: 'Peito' },
+          'supino-inclinado': { name: 'Supino Inclinado', muscle: 'Peito' },
+          'crucifixo': { name: 'Crucifixo', muscle: 'Peito' },
+          'desenvolvimento': { name: 'Desenvolvimento', muscle: 'Ombro' },
+          'elevacao-lateral': { name: 'Elevação Lateral', muscle: 'Ombro' },
+          'elevacao-frontal': { name: 'Elevação Frontal', muscle: 'Ombro' },
+          'triceps-pulley': { name: 'Tríceps Pulley', muscle: 'Tríceps' },
+          'triceps-frances': { name: 'Tríceps Francês', muscle: 'Tríceps' },
+          'rosca-direta': { name: 'Rosca Direta', muscle: 'Bíceps' },
+          'rosca-alternada': { name: 'Rosca Alternada', muscle: 'Bíceps' },
+          'remada-curvada': { name: 'Remada Curvada', muscle: 'Costas' },
+          'puxada-frente': { name: 'Puxada Frente', muscle: 'Costas' },
+          'puxada-costas': { name: 'Puxada Costas', muscle: 'Costas' },
+          'agachamento': { name: 'Agachamento', muscle: 'Quadríceps' },
+          'cadeira-extensora': { name: 'Cadeira Extensora', muscle: 'Quadríceps' },
+          'leg-press': { name: 'Leg Press', muscle: 'Quadríceps' },
+          'flexora-deitada': { name: 'Flexora Deitada', muscle: 'Posterior' },
+          'stiff': { name: 'Stiff', muscle: 'Posterior' },
+          'gemeos-em-pe': { name: 'Gêmeos em Pé', muscle: 'Panturrilha' },
+          'gemeos-sentado': { name: 'Gêmeos Sentado', muscle: 'Panturrilha' }
+        };
+        
+        // Preserve the start time if it exists
+        if (!currentWorkout.startTime) {
+          currentWorkout.startTime = new Date().toISOString();
+        }
+        
+        // Add new exercises to existing workout
+        selectedExercises.forEach(exerciseId => {
+          const exerciseInfo = exerciseMap[exerciseId];
+          if (exerciseInfo) {
+            // Check if exercise already exists
+            const existingExercise = currentWorkout.exercises.find(ex => ex.id === exerciseId);
+            if (!existingExercise) {
+              currentWorkout.exercises.push({
+                id: exerciseId,
+                name: exerciseInfo.name,
+                muscle: exerciseInfo.muscle,
+                sets: [{
+                  number: 1,
+                  weight: '',
+                  reps: '',
+                  completed: false
+                }],
+                notes: ''
+              });
+            }
+          }
+        });
+        
+        // Save updated workout data
+        localStorage.setItem('workoutData', JSON.stringify(currentWorkout));
+      } else {
+        // Create new workout with selected exercises
+        localStorage.setItem('selectedExercises', JSON.stringify(selectedExercises));
+      }
+      
+      window.location.href = "{% url 'montar_treino_detalhes' %}";
+    }
+
+    // Add exercises button
+    document.getElementById('addExercisesBtn').addEventListener('click', createWorkout);
+    
+    // Muscle filter functionality
+    let currentFilter = 'all';
+    
+    function openMuscleFilter() {
+      document.getElementById('muscleFilterModal').style.display = 'flex';
+      updateFilterButton();
+    }
+    
+    function closeMuscleFilter() {
+      document.getElementById('muscleFilterModal').style.display = 'none';
+    }
+    
+    function selectMuscle(muscle) {
+      currentFilter = muscle;
+      
+      // Update visual selection
+      document.querySelectorAll('.muscle-option').forEach(option => {
+        option.classList.remove('selected');
+      });
+      document.querySelector(`[data-muscle="${muscle}"]`).classList.add('selected');
+      
+      // Filter exercises
+      filterExercises(muscle);
+      
+      // Update filter button text
+      updateFilterButton();
+      
+      // Close modal
+      closeMuscleFilter();
+    }
+    
+    function filterExercises(muscle) {
+      const muscleGroups = document.querySelectorAll('.muscle-group');
+      
+      muscleGroups.forEach(group => {
+        if (muscle === 'all' || group.dataset.muscle === muscle) {
+          group.style.display = 'block';
+        } else {
+          group.style.display = 'none';
+        }
+      });
+    }
+    
+    function updateFilterButton() {
+      const filterBtn = document.querySelector('.filter-btn');
+      const muscleNames = {
+        'all': 'Todos os Músculos',
+        'peito': 'Peito',
+        'ombro': 'Ombro',
+        'triceps': 'Tríceps',
+        'biceps': 'Bíceps',
+        'costas': 'Costas',
+        'quadriceps': 'Quadríceps',
+        'posterior': 'Posterior',
+        'panturrilha': 'Panturrilha'
+      };
+      
+      filterBtn.textContent = muscleNames[currentFilter];
+    }
+    
+    // Close modal when clicking outside
+    document.getElementById('muscleFilterModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeMuscleFilter();
+      }
+    });
+    
+    // Initialize filter
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelector('[data-muscle="all"]').classList.add('selected');
+    });
+  </script>
+</body>
+</html> 

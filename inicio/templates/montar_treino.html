@@ -1,0 +1,105 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Montar Treino - Nutra</title>
+  <link rel="stylesheet" href="{% static 'inicio/css/global.css' %}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    .add-exercise-section {
+      margin: 40px 0;
+      text-align: center;
+    }
+    
+    .add-exercise-btn {
+      background: #8fd19e;
+      color: #121212;
+      border: none;
+      padding: 18px 35px;
+      border-radius: 25px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(143, 209, 158, 0.3);
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      min-height: 60px;
+    }
+    
+    .add-exercise-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(143, 209, 158, 0.4);
+      text-decoration: none;
+      color: #121212;
+    }
+    
+    .empty-state {
+      text-align: center;
+      color: #888;
+      margin: 60px 0;
+      font-size: 18px;
+      background: #2a2a2a;
+      border-radius: 15px;
+      padding: 40px 20px;
+      box-shadow: 0 4px 15px rgba(143, 209, 158, 0.1);
+      border: 1px solid rgba(143, 209, 158, 0.2);
+    }
+    
+    .empty-state i {
+      font-size: 80px;
+      margin-bottom: 25px;
+      color: #8fd19e;
+    }
+    
+    .empty-state p {
+      margin: 15px 0;
+      line-height: 1.6;
+    }
+    
+    @media (min-width: 768px) {
+      .empty-state {
+        margin: 40px auto;
+        max-width: 600px;
+        padding: 60px 40px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="page-header">
+      <a href="{% url 'treino' %}" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+      Montar Treino
+    </div>
+
+    <!-- Add Exercise Button -->
+    <div class="add-exercise-section">
+      <a href="{% url 'adicionar_exercicio' %}" class="add-exercise-btn">
+        <i class="fas fa-plus"></i>
+        Adicionar Exercício
+      </a>
+    </div>
+    
+    <!-- Empty State -->
+    <div class="empty-state">
+      <i class="fas fa-dumbbell"></i>
+      <p>Nenhum exercício adicionado ainda.</p>
+      <p>Clique em "+ Adicionar Exercício" para começar!</p>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <nav>
+      <a href="#" class="active"><i class="fas fa-dumbbell"></i> Treinos</a>
+      <a href="{% url 'dieta' %}"><i class="fas fa-utensils"></i> Dieta</a>
+      <a href="{% url 'perfil' %}"><i class="fas fa-user"></i> Perfil</a>
+    </nav>
+  </footer>
+</body>
+</html>

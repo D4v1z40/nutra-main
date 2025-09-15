@@ -1,0 +1,977 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nutra - Perfil</title>
+  <link rel="stylesheet" href="{% static 'inicio/css/global.css' %}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    /* Remove spinners from number inputs */
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+    
+    /* Remove spinners from all number inputs globally */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+    
+    .profile-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      min-height: calc(100vh - 200px);
+      padding: 40px 20px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    
+    @media (min-width: 768px) {
+      .profile-container {
+        min-height: calc(100vh - 150px);
+        padding: 60px 40px;
+      }
+    }
+    
+    .settings-icon {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #8fd19e;
+      color: white;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      font-size: 20px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(143, 209, 158, 0.3);
+      z-index: 1001;
+    }
+    
+    .settings-icon:hover {
+      background: #7bc08a;
+      transform: scale(1.1);
+    }
+    
+    .user-avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 4px solid #8fd19e;
+      object-fit: cover;
+      margin-bottom: 30px;
+      box-shadow: 0 8px 25px rgba(143, 209, 158, 0.3);
+    }
+    
+    .welcome-title {
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+    
+    .user-name {
+      color: #fff;
+      font-size: 16px;
+      margin-bottom: 50px;
+      font-weight: 500;
+    }
+    
+    .profile-buttons {
+      width: 100%;
+      max-width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .profile-btn {
+      width: 100%;
+      padding: 18px 25px;
+      border: none;
+      border-radius: 15px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      min-height: 60px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .profile-btn i {
+      font-size: 20px;
+    }
+    
+    .btn-edit {
+      background: #8fd19e;
+      color: #121212;
+    }
+    
+    .btn-edit:hover {
+      background: #7bc08a;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(143, 209, 158, 0.4);
+    }
+    
+    .btn-info {
+      background: #8fd19e;
+      color: #121212;
+    }
+    
+    .btn-info:hover {
+      background: #7bc08a;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(143, 209, 158, 0.4);
+    }
+    
+    .btn-logout {
+      background: #e74c3c;
+      color: white;
+    }
+    
+    .btn-logout:hover {
+      background: #c0392b;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
+    }
+    
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .modal.show {
+      opacity: 1;
+    }
+    
+    .modal-content {
+      background: #2a2a2a;
+      margin: 5% auto;
+      padding: 30px;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 80vh;
+      overflow-y: auto;
+      position: relative;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      transform: scale(0.8) translateY(-50px);
+      transition: transform 0.3s ease;
+    }
+    
+    .modal.show .modal-content {
+      transform: scale(1) translateY(0);
+    }
+    
+    /* Modal de logout menor */
+    #logoutModal .modal-content {
+      max-width: 350px;
+      padding: 20px;
+    }
+    
+    #logoutModal h2 {
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+    
+    #logoutModal p {
+      font-size: 14px;
+      margin-bottom: 20px;
+      color: #ccc;
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+    }
+    
+    .modal-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #8fd19e;
+    }
+    
+    .profile-photo-upload {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    #profilePhotoPreview {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #8fd19e;
+      box-shadow: 0 4px 15px rgba(143, 209, 158, 0.3);
+    }
+    
+    .upload-btn {
+      background: #8fd19e;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .upload-btn:hover {
+      background: #7bc08a;
+      transform: scale(1.05);
+    }
+    
+    .close {
+      color: #888;
+      font-size: 32px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+    
+    .close:hover {
+      color: #fff;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      color: #8fd19e;
+      font-weight: bold;
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+    
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #444;
+      border-radius: 10px;
+      background: #333;
+      color: #fff;
+      font-size: 16px;
+      box-sizing: border-box;
+      transition: border-color 0.3s ease;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #8fd19e;
+    }
+    
+    .modal-actions {
+      display: flex;
+      gap: 15px;
+      margin-top: 30px;
+    }
+    
+    .modal-btn {
+      flex: 1;
+      padding: 15px 25px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
+    
+    .modal-btn.primary {
+      background: #8fd19e;
+      color: #121212;
+    }
+    
+    .modal-btn.primary:hover {
+      background: #7bc08a;
+      transform: translateY(-2px);
+    }
+    
+    .modal-btn.secondary {
+      background: #666;
+      color: #fff;
+    }
+    
+    .modal-btn.secondary:hover {
+      background: #777;
+      transform: translateY(-2px);
+    }
+    
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="{% url 'configuracoes' %}" class="settings-icon" id="openSettings"><i class="fas fa-cog"></i></a>
+    
+    <div class="profile-container">
+      <img src="{% if user.profile.profile_photo %}{{ user.profile.profile_photo.url }}?v={{ timestamp }}{% else %}{% static 'inicio/img/userCircle.png' %}{% endif %}" 
+           alt="Ícone de usuário" 
+           class="user-avatar" 
+           id="userAvatar" />
+      
+      <h1 class="welcome-title">Seja bem-vindo(a)</h1>
+      <p class="user-name" id="userNameDisplay">{{ user.username }}</p>      
+      
+      <div class="profile-buttons">
+        <button class="profile-btn btn-edit" id="openEditModal">
+          <i class="fas fa-edit"></i> Editar Perfil
+        </button>     
+        <button class="profile-btn btn-info" id="openInfoModal">
+          <i class="fas fa-user"></i> Dados Pessoais
+        </button>
+        <button type="button" class="profile-btn btn-logout" onclick="confirmLogout()">
+          <i class="fas fa-sign-out-alt"></i> Sair
+        </button>
+      </div>
+      
+      <!-- Modal de Confirmação de Logout -->
+      <div id="logoutModal" class="modal">
+        <div class="modal-content">
+          <h2>Confirmar Saída</h2>
+          <p>Tem certeza que deseja sair?</p>
+          <div class="modal-actions">
+            <button class="modal-btn secondary" onclick="closeLogoutModal()">Cancelar</button>
+            <button class="modal-btn primary" onclick="performLogout()">Sair</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Loading de Logout -->
+      <div id="logoutLoading" class="modal">
+        <div class="modal-content">
+          <div class="loading-spinner"></div>
+          <p>Saindo...</p>
+        </div>
+      </div>
+      
+      <!-- Modal Editar Perfil -->
+      <div id="editModal" class="modal">
+        <div class="modal-content">
+          <span class="close" id="closeEditModal">&times;</span>
+          <h2>Editar Perfil</h2>
+          <form id="editProfileForm" enctype="multipart/form-data">
+            <div class="form-group">
+              <label>Foto de Perfil</label>
+              <div class="profile-photo-upload">
+                <img id="profilePhotoPreview" src="{% if user.profile.profile_photo %}{{ user.profile.profile_photo.url }}{% else %}{% static 'inicio/img/userCircle.png' %}{% endif %}" alt="Foto de perfil">
+                <input type="file" id="profilePhotoInput" name="profile_photo" accept="image/*" style="display: none;">
+                <div style="display: flex; gap: 10px;">
+                  <button type="button" class="upload-btn" onclick="document.getElementById('profilePhotoInput').click()">
+                    <i class="fas fa-camera"></i> Alterar Foto
+                  </button>
+                  <button type="button" class="upload-btn" onclick="removePhoto()" style="background: #e74c3c;">
+                    <i class="fas fa-trash"></i> Remover
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Nome de Usuário</label>
+              <input type="text" id="usernameInput" name="username" value="{{ user.username }}" required>
+            </div>
+            <div class="form-group">
+              <label>Data de Nascimento</label>
+              <input type="date" id="birthDateInput" name="birth_date" value="{% if user.profile.birth_date %}{{ user.profile.birth_date|date:'Y-m-d' }}{% endif %}">
+            </div>
+            <div class="form-group">
+              <label>Gênero</label>
+              <select id="genderInput" name="gender">
+                <option value="M" {% if user.profile.gender == 'M' %}selected{% endif %}>Masculino</option>
+                <option value="F" {% if user.profile.gender == 'F' %}selected{% endif %}>Feminino</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Altura (cm)</label>
+              <input type="number" id="heightInput" name="height" value="{% if user.profile.height %}{{ user.profile.height }}{% else %}170{% endif %}" min="100" max="250">
+            </div>
+            <div class="form-group">
+              <label>Peso (kg)</label>
+              <input type="number" id="weightInput" name="weight" value="{% if user.profile.weight %}{{ user.profile.weight }}{% else %}70{% endif %}" min="30" max="300" step="0.1">
+            </div>
+            <div class="form-group">
+              <label>Objetivo</label>
+              <select id="objectiveInput" name="objective">
+                <option value="maintain" {% if user.profile.objective == 'maintain' %}selected{% endif %}>Manter Peso</option>
+                <option value="lose" {% if user.profile.objective == 'lose' %}selected{% endif %}>Perder Peso</option>
+                <option value="gain" {% if user.profile.objective == 'gain' %}selected{% endif %}>Ganhar Peso</option>
+              </select>
+            </div>
+            <div class="modal-actions">
+              <button type="button" class="modal-btn secondary" onclick="closeEditModal()">Cancelar</button>
+              <button type="submit" class="modal-btn primary">Salvar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <!-- Modal Dados Pessoais -->
+      <div id="infoModal" class="modal">
+        <div class="modal-content">
+          <span class="close" id="closeInfoModal">&times;</span>
+          <h2>Dados Pessoais</h2>
+          <form id="personalDataForm">
+            <input type="hidden" name="username" value="{{ user.username }}">
+            <div class="form-group">
+              <label>Nome Completo</label>
+              <input type="text" id="fullNameInput" name="full_name" value="{% if user.get_full_name %}{{ user.get_full_name }}{% else %}{{ user.username }}{% endif %}" required>
+            </div>
+            <div class="form-group">
+              <label>Telefone</label>
+              <input type="tel" id="phoneInput" name="phone" value="{% if user.profile.phone %}{{ user.profile.phone }}{% endif %}" placeholder="(00) 00000-0000">
+            </div>
+            <div class="modal-actions">
+              <button type="button" class="modal-btn secondary" onclick="closeInfoModal()">Cancelar</button>
+              <button type="submit" class="modal-btn primary">Salvar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <!-- Modal Configurações -->
+      <div id="settingsModal" class="modal">
+        <div class="modal-content">
+          <span class="close" id="closeSettingsModal">&times;</span>
+          <h2>Configurações</h2>
+          <p>Funcionalidade em desenvolvimento.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Footer -->
+  <footer>
+    <nav>
+      <a href="{% url 'treino' %}"><i class="fas fa-dumbbell"></i> Treinos</a>
+      <a href="{% url 'dieta' %}"><i class="fas fa-utensils"></i> Dieta</a>
+      <a href="#" class="active"><i class="fas fa-user"></i> Perfil</a>
+    </nav>
+  </footer>
+  
+  <!-- Notification System -->
+  <div id="notificationContainer" style="position: fixed; top: 20px; right: 20px; z-index: 10000; pointer-events: none;"></div>
+  
+  <script>
+    // Page entrance animation
+    document.addEventListener('DOMContentLoaded', function() {
+      const container = document.querySelector('.container');
+      container.style.opacity = '0';
+      container.style.transform = 'translateY(20px)';
+      
+      setTimeout(() => {
+        container.style.transition = 'all 0.5s ease';
+        container.style.opacity = '1';
+        container.style.transform = 'translateY(0)';
+      }, 100);
+      
+      // Recarregar dados da página
+      reloadPageData();
+    });
+    
+    // Função para recarregar dados da página
+    function reloadPageData() {
+      console.log('DEBUG: Recarregando dados da página...');
+      
+      // Forçar recarregamento dos dados do usuário
+      const userNameDisplay = document.getElementById('userNameDisplay');
+      if (userNameDisplay) {
+        userNameDisplay.textContent = '{{ user.username }}';
+      }
+      
+      // Forçar recarregamento da foto
+      const userAvatar = document.getElementById('userAvatar');
+      if (userAvatar) {
+        const currentSrc = userAvatar.src;
+        userAvatar.src = currentSrc.split('?')[0] + '?v=' + Date.now();
+      }
+      
+      // Recarregar dados dos modais
+      loadCurrentProfileData();
+      loadCurrentPersonalData();
+      
+      console.log('DEBUG: Dados recarregados');
+    }
+    
+    // Notification system
+    function showNotification(message, type = 'info', duration = 3000) {
+      const container = document.getElementById('notificationContainer');
+      const notification = document.createElement('div');
+      
+      notification.className = `notification notification-${type}`;
+      notification.style.cssText = `
+        background: ${type === 'success' ? 'linear-gradient(135deg, #4caf50, #388e3c)' : 
+                      type === 'error' ? 'linear-gradient(135deg, #f44336, #d32f2f)' : 
+                      type === 'warning' ? 'linear-gradient(135deg, #ff9800, #f57c00)' : 
+                      'linear-gradient(135deg, #2196f3, #1976d2)'};
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+        pointer-events: auto;
+        max-width: 300px;
+        font-size: 14px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      `;
+      
+      const icon = document.createElement('i');
+      icon.className = type === 'success' ? 'fas fa-check-circle' :
+                      type === 'error' ? 'fas fa-exclamation-circle' :
+                      type === 'warning' ? 'fas fa-exclamation-triangle' :
+                      'fas fa-info-circle';
+      
+      const text = document.createElement('span');
+      text.textContent = message;
+      
+      notification.appendChild(icon);
+      notification.appendChild(text);
+      container.appendChild(notification);
+      
+      // Animate in
+      setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+      }, 100);
+      
+      // Auto remove
+      setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+          }
+        }, 300);
+      }, duration);
+      
+      // Click to dismiss
+      notification.addEventListener('click', () => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+          }
+        }, 300);
+      });
+    }
+    
+    // Modal Editar Perfil
+    document.getElementById('openEditModal').onclick = function() {
+      const modal = document.getElementById('editModal');
+      
+      // Carregar dados atuais nos campos
+      loadCurrentProfileData();
+      
+      modal.style.display = 'flex';
+      document.body.classList.add('modal-open');
+      // Trigger animation
+      setTimeout(() => modal.classList.add('show'), 10);
+    };
+    
+    function loadCurrentProfileData() {
+      // Carregar dados atuais do usuário nos campos do formulário
+      const fullNameInput = document.getElementById('fullNameInput');
+      const usernameInput = document.getElementById('usernameInput');
+      const heightInput = document.getElementById('heightInput');
+      const weightInput = document.getElementById('weightInput');
+      const objectiveSelect = document.getElementById('objectiveSelect');
+      
+      if (fullNameInput) {
+        fullNameInput.value = '{{ user.get_full_name|default:user.username }}';
+      }
+      if (usernameInput) {
+        usernameInput.value = '{{ user.username }}';
+      }
+      if (heightInput) {
+        heightInput.value = '{% if user.profile.height %}{{ user.profile.height }}{% endif %}';
+      }
+      if (weightInput) {
+        weightInput.value = '{% if user.profile.weight %}{{ user.profile.weight }}{% endif %}';
+      }
+      if (objectiveSelect) {
+        objectiveSelect.value = '{% if user.profile.objective %}{{ user.profile.objective }}{% endif %}';
+      }
+    }
+    
+    function closeEditModal() {
+      const modal = document.getElementById('editModal');
+      modal.classList.remove('show');
+      setTimeout(() => {
+        modal.style.display = 'none';
+        document.body.classList.remove('modal-open');
+      }, 300);
+    }
+    
+    document.getElementById('closeEditModal').onclick = closeEditModal;
+    
+    // Profile photo preview
+    document.getElementById('profilePhotoInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('profilePhotoPreview').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+    
+    // Remove photo function
+    function removePhoto() {
+      document.getElementById('profilePhotoInput').value = '';
+      document.getElementById('profilePhotoPreview').src = '{% static "inicio/img/userCircle.png" %}';
+      console.log('Foto removida, campo limpo');
+    }
+    
+    // Form submissions
+    document.getElementById('editProfileForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      // Prevenir envios duplos
+      const submitBtn = this.querySelector('button[type="submit"]');
+      if (submitBtn.disabled) return;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Salvando...';
+      
+      const formData = new FormData(this);
+      
+      // Remover campo de foto se estiver vazio
+      const photoInput = document.getElementById('profilePhotoInput');
+      if (!photoInput.files || photoInput.files.length === 0) {
+        formData.delete('profile_photo');
+      }
+      
+      // Debug: mostrar dados do formulário
+      console.log('Dados do formulário:');
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
+      }
+      
+      // Debug: verificar campos específicos
+      console.log('DEBUG: Verificando campos específicos:');
+      console.log('  - height:', document.getElementById('heightInput').value);
+      console.log('  - weight:', document.getElementById('weightInput').value);
+      console.log('  - gender:', document.getElementById('genderInput').value);
+      console.log('  - objective:', document.getElementById('objectiveInput').value);
+      
+      try {
+        console.log('Enviando requisição para:', '{% url "update_profile" %}');
+        console.log('CSRF Token:', getCookie('csrftoken'));
+        
+        const response = await fetch('{% url "update_profile" %}', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: formData
+        });
+        
+        console.log('Resposta do servidor:', response.status);
+        const result = await response.json();
+        console.log('Resultado:', result);
+        
+        if (result.success) {
+          showNotification('Perfil atualizado com sucesso!', 'success');
+          
+          // Atualizar foto de perfil se foi alterada
+          if (result.profile && result.profile.photo_url) {
+            console.log('DEBUG: Atualizando foto para:', result.profile.photo_url);
+            const userAvatar = document.getElementById('userAvatar');
+            if (userAvatar) {
+              userAvatar.src = result.profile.photo_url + '?v=' + Date.now();
+            }
+          }
+          
+          // Atualizar nome do usuário na tela
+          if (result.profile && result.profile.username) {
+            console.log('DEBUG: Atualizando username na tela para:', result.profile.username);
+            document.getElementById('userNameDisplay').textContent = result.profile.username;
+          }
+          
+          // Atualizar campos do formulário com os novos dados
+          if (result.profile) {
+            // Atualizar campos do modal de edição
+            const fullNameInput = document.getElementById('fullNameInput');
+            const usernameInput = document.getElementById('usernameInput');
+            const heightInput = document.getElementById('heightInput');
+            const weightInput = document.getElementById('weightInput');
+            const objectiveSelect = document.getElementById('objectiveSelect');
+            
+            if (fullNameInput && result.profile.first_name) {
+              fullNameInput.value = result.profile.first_name;
+            }
+            if (usernameInput && result.profile.username) {
+              usernameInput.value = result.profile.username;
+            }
+            if (heightInput && result.profile.height) {
+              heightInput.value = result.profile.height;
+            }
+            if (weightInput && result.profile.weight) {
+              weightInput.value = result.profile.weight;
+            }
+            if (objectiveSelect && result.profile.objective) {
+              objectiveSelect.value = result.profile.objective;
+            }
+          }
+          
+          closeEditModal();
+          // Não recarregar a página, apenas atualizar os dados dinamicamente
+        } else {
+          showNotification('Erro ao atualizar perfil: ' + result.error, 'error');
+        }
+      } catch (error) {
+        showNotification('Erro ao atualizar perfil: ' + error.message, 'error');
+      } finally {
+        // Reabilitar botão
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Salvar';
+      }
+    });
+    
+    document.getElementById('personalDataForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      // Prevenir envios duplos
+      const submitBtn = this.querySelector('button[type="submit"]');
+      if (submitBtn.disabled) return;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Salvando...';
+      
+      const formData = new FormData(this);
+      
+      // Debug: mostrar dados do formulário
+      console.log('Dados pessoais do formulário:');
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
+      }
+      
+      // Debug: verificar campos específicos
+      console.log('DEBUG: Verificando campos específicos:');
+      console.log('  - full_name:', document.getElementById('fullNameInput').value);
+      console.log('  - phone:', document.getElementById('phoneInput').value);
+      console.log('  - username:', document.querySelector('input[name="username"]').value);
+      
+      try {
+        const response = await fetch('{% url "update_personal_data" %}', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: formData
+        });
+        
+        console.log('Resposta do servidor (dados pessoais):', response.status);
+        const result = await response.json();
+        console.log('Resultado (dados pessoais):', result);
+        
+        if (result.success) {
+          showNotification('Dados pessoais atualizados com sucesso!', 'success');
+          
+          console.log('DEBUG: Dados recebidos do servidor:', result);
+          console.log('DEBUG: first_name:', result.profile.first_name);
+          console.log('DEBUG: phone:', result.profile.phone);
+          
+          // Atualizar nome do usuário na tela (usar username, não first_name)
+          if (result.profile && result.profile.username) {
+            console.log('DEBUG: Atualizando username na tela para:', result.profile.username);
+            document.getElementById('userNameDisplay').textContent = result.profile.username;
+          }
+          
+          // Atualizar campos do formulário com os novos dados
+          if (result.profile) {
+            const fullNameInput = document.getElementById('fullNameInput');
+            const phoneInput = document.getElementById('phoneInput');
+            
+            if (fullNameInput && result.profile.first_name) {
+              fullNameInput.value = result.profile.first_name;
+            }
+            if (phoneInput && result.profile.phone) {
+              phoneInput.value = result.profile.phone;
+            }
+          }
+          
+          closeInfoModal();
+          // Não recarregar a página, apenas atualizar os dados dinamicamente
+        } else {
+          showNotification('Erro ao atualizar dados: ' + result.error, 'error');
+        }
+      } catch (error) {
+        showNotification('Erro ao atualizar dados: ' + error.message, 'error');
+      } finally {
+        // Reabilitar botão
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Salvar';
+      }
+    });
+    
+    // Modal Dados Pessoais
+    document.getElementById('openInfoModal').onclick = function() {
+      const modal = document.getElementById('infoModal');
+      
+      // Carregar dados atuais nos campos
+      loadCurrentPersonalData();
+      
+      modal.style.display = 'flex';
+      document.body.classList.add('modal-open');
+      // Trigger animation
+      setTimeout(() => modal.classList.add('show'), 10);
+    };
+    
+    function loadCurrentPersonalData() {
+      // Carregar dados atuais do usuário nos campos do formulário
+      const fullNameInput = document.getElementById('fullNameInput');
+      const phoneInput = document.getElementById('phoneInput');
+      
+      if (fullNameInput) {
+        fullNameInput.value = '{{ user.get_full_name|default:user.username }}';
+      }
+      if (phoneInput) {
+        phoneInput.value = '{% if user.profile.phone %}{{ user.profile.phone }}{% endif %}';
+      }
+    }
+    
+    function closeInfoModal() {
+      const modal = document.getElementById('infoModal');
+      modal.classList.remove('show');
+      setTimeout(() => {
+        modal.style.display = 'none';
+        document.body.classList.remove('modal-open');
+      }, 300);
+    }
+    
+    document.getElementById('closeInfoModal').onclick = closeInfoModal;
+    
+    // Modal Configurações
+    document.getElementById('openSettings').onclick = function() {
+      window.location.href = "{% url 'configuracoes' %}";
+    };
+    
+    document.getElementById('closeSettingsModal').onclick = function() {
+      document.getElementById('settingsModal').style.display = 'none';
+    };
+    
+    // Fechar modal ao clicar fora
+    window.onclick = function(event) {
+      ['editModal','infoModal','settingsModal','logoutModal','logoutLoading'].forEach(function(id) {
+        var modal = document.getElementById(id);
+        if (event.target == modal) {
+          modal.style.display = 'none';
+          document.body.classList.remove('modal-open');
+        }
+      });
+    };
+
+    // Funções de logout
+    function confirmLogout() {
+      const modal = document.getElementById('logoutModal');
+      modal.style.display = 'flex';
+      document.body.classList.add('modal-open');
+      // Trigger animation
+      setTimeout(() => modal.classList.add('show'), 10);
+    }
+    
+    function closeLogoutModal() {
+      const modal = document.getElementById('logoutModal');
+      modal.classList.remove('show');
+      setTimeout(() => {
+        modal.style.display = 'none';
+        document.body.classList.remove('modal-open');
+      }, 300);
+    }
+    
+    function performLogout() {
+      // Limpar dados temporários do localStorage
+      localStorage.removeItem('selectedExercises');
+      localStorage.removeItem('workoutData');
+      
+      // Mostrar loading
+      document.getElementById('logoutModal').style.display = 'none';
+      const loadingModal = document.getElementById('logoutLoading');
+      loadingModal.style.display = 'flex';
+      document.body.classList.add('modal-open');
+      // Trigger animation
+      setTimeout(() => loadingModal.classList.add('show'), 10);
+      
+      // Simular delay e fazer logout
+      setTimeout(() => {
+        // Criar form temporário para fazer logout
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = "{% url 'logout' %}";
+        
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = 'csrfmiddlewaretoken';
+        csrfToken.value = getCookie('csrftoken');
+        
+        form.appendChild(csrfToken);
+        document.body.appendChild(form);
+        form.submit();
+      }, 1500);
+    }
+    
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+  </script>
+</body>
+</html>

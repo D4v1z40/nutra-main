@@ -1,0 +1,84 @@
+body {
+    margin: 0;
+    font-family: sans-serif;
+    background-color: #000;
+    color: #fff;
+    text-align: center;
+}
+
+header {
+    background: #0a5e00;
+    padding: 1rem;
+}
+.titulo {
+    margin: 0;
+    font-size: 24px;
+}
+
+.montar-container {
+    padding: 2rem;
+    text-align: center; /* Garantir que o conteúdo dentro da main seja centralizado */
+}
+
+.exercicio {
+    background: #444;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+}
+.exercicio h2 {
+    margin-top: 0;
+}
+table {
+    width: 100%;
+    color: white;
+    margin-top: 1rem;
+}
+table th, table td {
+    padding: 0.5rem;
+}
+.adicionar {
+    margin-top: 1rem;
+    background: #333;
+    color: white;
+    border: none;
+    padding: 0.5rem;
+    border-radius: 6px;
+}
+
+.ex-nome {
+    margin: 1rem 0;
+    border-bottom: 1px solid white;
+    padding-bottom: 0.5rem;
+}
+
+.btn-add {
+    background: #444;
+    color: white;
+    border: none;
+    padding: 0.25rem 1rem; /* Diminuindo o padding superior/inferior para reduzir a altura */
+    border-radius: 12px;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    font-size: 20px;
+    width: 80%;
+    max-width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 0.1; /* Garantindo que o texto fique centralizado verticalmente, sem aumentar a altura */
+    height: auto; /* Deixe o botão com altura proporcional ao conteúdo */
+}
+
+
+
+footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: #0a5e00;
+}
+footer nav a {
+    color: white;
+    padding: 1rem;
+    display: inline-block;
+}

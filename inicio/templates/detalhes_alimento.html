@@ -1,0 +1,469 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ food.name }} - Nutra</title>
+  <link rel="stylesheet" href="{% static 'inicio/css/perfil.css' %}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    /* Remove spinners from number inputs */
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+    
+    /* Remove spinners from all number inputs globally */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+    
+    body {
+      background: #111;
+      color: #fff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .food-header {
+      background: #232323;
+      color: #fff;
+      padding: 1rem 0;
+      position: relative;
+    }
+    
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+    
+    .back-btn {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      transition: background 0.3s;
+    }
+    
+    .back-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .food-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin: 0;
+      flex: 1;
+      text-align: center;
+    }
+    
+    .favorite-btn {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      transition: all 0.3s;
+    }
+    
+    .favorite-btn.favorited {
+      color: #ffd700;
+    }
+    
+    .nutritional-summary {
+      display: flex;
+      align-items: center;
+      padding: 20px;
+      gap: 20px;
+    }
+    
+    .calorie-circle {
+      position: relative;
+      width: 120px;
+      height: 120px;
+    }
+    
+    .calorie-circle svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+    
+    .calorie-circle circle {
+      fill: none;
+      stroke-width: 8;
+    }
+    
+    .calorie-bg {
+      stroke: #333;
+    }
+    
+    .calorie-fill {
+      stroke: #4caf50;
+      stroke-linecap: round;
+      transition: stroke-dasharray 0.3s;
+    }
+    
+    .calorie-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+    
+    .calorie-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #fff;
+    }
+    
+    .calorie-unit {
+      font-size: 12px;
+      color: #888;
+    }
+    
+    .macros-columns {
+      display: flex;
+      gap: 15px;
+      flex: 1;
+    }
+    
+    .macro-column {
+      text-align: center;
+      flex: 1;
+    }
+    
+    .macro-percentage {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .macro-percentage.carbs { color: #4caf50; }
+    .macro-percentage.protein { color: #ff6b9d; }
+    .macro-percentage.fat { color: #ffa726; }
+    
+    .macro-grams {
+      font-size: 18px;
+      font-weight: bold;
+      color: #fff;
+      margin-bottom: 5px;
+    }
+    
+    .macro-label {
+      font-size: 12px;
+      color: #888;
+    }
+    
+    .additional-info {
+      display: flex;
+      gap: 20px;
+      padding: 0 20px;
+      margin-bottom: 20px;
+    }
+    
+    .info-item {
+      font-size: 14px;
+      color: #888;
+    }
+    
+    .quantity-section {
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .quantity-input {
+      background: #333;
+      border: 1px solid #444;
+      border-radius: 8px;
+      color: #fff;
+      padding: 12px;
+      width: 80px;
+      text-align: center;
+      font-size: 16px;
+      outline: none;
+      -moz-appearance: textfield;
+    }
+    
+    .quantity-input::-webkit-outer-spin-button,
+    .quantity-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    
+    .quantity-input:focus {
+      border-color: #4caf50;
+    }
+    
+    .unit-selector {
+      background: #333;
+      border: 1px solid #444;
+      border-radius: 8px;
+      color: #fff;
+      padding: 12px 15px;
+      font-size: 16px;
+      outline: none;
+      cursor: pointer;
+      position: relative;
+    }
+    
+    .quantity-display {
+      color: #4fc3f7;
+      font-size: 16px;
+      font-weight: bold;
+    }
+    
+    .add-button {
+      background: linear-gradient(135deg, #2196f3, #1976d2);
+      color: #fff;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+      transition: all 0.3s;
+      width: 100%;
+      margin: 20px;
+    }
+    
+    .add-button:hover {
+      transform: scale(1.02);
+      box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
+    }
+    
+    .nutritional-info {
+      background: #232323;
+      border-radius: 12px;
+      margin: 20px;
+      overflow: hidden;
+    }
+    
+    .info-header {
+      background: #2a2a2a;
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+    
+    .info-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #fff;
+    }
+    
+    .info-toggle {
+      color: #888;
+      transition: transform 0.3s;
+    }
+    
+    .info-toggle.expanded {
+      transform: rotate(180deg);
+    }
+    
+    .info-content {
+      padding: 20px;
+      display: none;
+    }
+    
+    .info-content.expanded {
+      display: block;
+    }
+    
+    .nutrition-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #333;
+    }
+    
+    .nutrition-row:last-child {
+      border-bottom: none;
+    }
+    
+    .nutrition-name {
+      color: #fff;
+    }
+    
+    .nutrition-value {
+      color: #8fd19e;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" style="padding-top: 0;">
+    <!-- Header -->
+    <div class="food-header">
+      <div class="header-content">
+        <button class="back-btn" onclick="window.history.back()">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <h1 class="food-title">{{ food.name }}</h1>
+        <button class="favorite-btn" id="favoriteBtn" onclick="toggleFavorite()">
+          <i class="far fa-star"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Nutritional Summary -->
+    <div class="nutritional-summary" style="justify-content: center; flex-direction: column; align-items: flex-start; gap: 10px;">
+      <div style="font-size: 20px; font-weight: bold; margin-bottom: 10px;">Informação Nutricional</div>
+      <div id="nutriCalorias">Calorias: 0 kcal</div>
+      <div id="nutriCarbs">Carboidratos: 0.0g</div>
+      <div id="nutriProtein">Proteínas: 0.0g</div>
+      <div id="nutriFat">Gorduras: 0.0g</div>
+      <div id="nutriFiber">Fibras: 0.0g</div>
+    </div>
+
+    <!-- Quantity Section -->
+    <div class="quantity-section">
+      <input type="number" class="quantity-input" id="quantityInput" value="1" min="1" onchange="updateNutritionalValues()">
+      <select class="unit-selector" id="unitSelector" onchange="updateNutritionalValues()">
+        <option value="g">grama</option>
+        <option value="kg">quilograma</option>
+        <option value="ml">mililitro</option>
+        <option value="l">litro</option>
+      </select>
+      <div class="quantity-display" id="quantityDisplay">1 gramas</div>
+    </div>
+
+    <!-- Add Button -->
+    <button class="add-button" onclick="addToMeal()">
+      Adicionar em sua refeição
+    </button>
+  </div>
+
+  <script>
+    // Food data from Django
+    const foodData = {
+      id: {{ food.id }},
+      name: "{{ food.name }}",
+      calories: {{ food.calories }},
+      protein: {{ food.protein }},
+      carbs: {{ food.carbs }},
+      fat: {{ food.fat }},
+      fiber: {{ food.fiber }},
+      price: {{ food.price|default:0 }}
+    };
+
+    let quantity = 1;
+    let unit = 'g';
+
+
+
+    // Update nutritional values based on quantity
+    function updateNutritionalValues() {
+      quantity = parseFloat(document.getElementById('quantityInput').value) || 1;
+      unit = document.getElementById('unitSelector').value;
+      let gramsMultiplier = 1;
+      if (unit === 'kg') gramsMultiplier = 1000;
+      else if (unit === 'l') gramsMultiplier = 1000;
+      else if (unit === 'ml') gramsMultiplier = 1;
+      const totalGrams = quantity * gramsMultiplier;
+      const multiplier = totalGrams / 100;
+      const calories = foodData.calories * multiplier;
+      const protein = foodData.protein * multiplier;
+      const carbs = foodData.carbs * multiplier;
+      const fat = foodData.fat * multiplier;
+      const fiber = foodData.fiber * multiplier;
+      document.getElementById('nutriCalorias').textContent = `Calorias: ${calories.toFixed(1)} kcal`;
+      document.getElementById('nutriCarbs').textContent = `Carboidratos: ${carbs.toFixed(1)}g`;
+      document.getElementById('nutriProtein').textContent = `Proteínas: ${protein.toFixed(1)}g`;
+      document.getElementById('nutriFat').textContent = `Gorduras: ${fat.toFixed(1)}g`;
+      document.getElementById('nutriFiber').textContent = `Fibras: ${fiber.toFixed(1)}g`;
+      const unitText = unit === 'g' ? 'gramas' : unit === 'kg' ? 'quilogramas' : unit === 'ml' ? 'mililitros' : 'litros';
+      document.getElementById('quantityDisplay').textContent = quantity + ' ' + unitText;
+    }
+    
+    // Add event listeners for real-time updates
+    document.addEventListener('DOMContentLoaded', function() {
+      const quantityInput = document.getElementById('quantityInput');
+      const unitSelector = document.getElementById('unitSelector');
+      
+      // Update on input change
+      quantityInput.addEventListener('input', updateNutritionalValues);
+      unitSelector.addEventListener('change', updateNutritionalValues);
+      
+      // Initial update
+      updateNutritionalValues();
+      checkFavoriteStatus();
+    });
+
+    // Toggle nutritional info
+    function toggleNutritionalInfo() {
+      const content = document.getElementById('infoContent');
+      const toggle = document.getElementById('infoToggle');
+      
+      content.classList.toggle('expanded');
+      toggle.classList.toggle('expanded');
+    }
+
+    // Check favorite status
+    function checkFavoriteStatus() {
+      // This would typically check against the database
+      // For now, we'll just show the unfavorited state
+      const btn = document.getElementById('favoriteBtn');
+      btn.innerHTML = '<i class="far fa-star"></i>';
+      btn.classList.remove('favorited');
+    }
+
+    // Toggle favorite
+    function toggleFavorite() {
+      const btn = document.getElementById('favoriteBtn');
+      const isFavorited = btn.classList.contains('favorited');
+      
+      if (isFavorited) {
+        btn.innerHTML = '<i class="far fa-star"></i>';
+        btn.classList.remove('favorited');
+      } else {
+        btn.innerHTML = '<i class="fas fa-star"></i>';
+        btn.classList.add('favorited');
+      }
+      
+      // Here you would typically make an API call to update the database
+    }
+
+    // Add to meal
+    function addToMeal() {
+      const mealData = {
+        foodId: foodData.id,
+        foodName: foodData.name,
+        quantity: quantity,
+        unit: unit,
+        calories: parseFloat((foodData.calories * (quantity * (unit === 'kg' || unit === 'l' ? 1000 : 1) / 100)).toFixed(1)),
+        protein: parseFloat((foodData.protein * (quantity * (unit === 'kg' || unit === 'l' ? 1000 : 1) / 100)).toFixed(1)),
+        carbs: parseFloat((foodData.carbs * (quantity * (unit === 'kg' || unit === 'l' ? 1000 : 1) / 100)).toFixed(1)),
+        fat: parseFloat((foodData.fat * (quantity * (unit === 'kg' || unit === 'l' ? 1000 : 1) / 100)).toFixed(1)),
+        fiber: parseFloat((foodData.fiber * (quantity * (unit === 'kg' || unit === 'l' ? 1000 : 1) / 100)).toFixed(1))
+      };
+      localStorage.setItem('selectedFood', JSON.stringify(mealData));
+      window.location.href = "{% url 'dieta' %}";
+    }
+  </script>
+</body>
+</html> 

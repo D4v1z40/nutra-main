@@ -1,0 +1,383 @@
+/* CSS Global para o Nutra */
+
+/* Reset e base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #000;
+  color: #fff;
+  min-height: 100vh;
+  padding-bottom: 80px; /* Espaço para o rodapé fixo */
+}
+
+/* Rodapé Global */
+footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #2c2c2c;
+  padding: 12px 0;
+  z-index: 1000;
+  border-top: 1px solid #444;
+}
+
+footer nav {
+  display: flex;
+  justify-content: space-around;
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+footer nav a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: #888;
+  font-size: 11px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  padding: 8px 12px;
+  border-radius: 8px;
+  min-width: 60px;
+}
+
+footer nav a:hover {
+  color: #8fd19e;
+  background: rgba(143, 209, 158, 0.1);
+}
+
+footer nav a.active {
+  color: #8fd19e;
+  background: rgba(143, 209, 158, 0.15);
+}
+
+footer nav a i {
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+
+footer nav a.active i {
+  background: #8fd19e;
+  color: #121212;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+/* Container principal - Responsivo para PC e Mobile */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  min-height: calc(100vh - 80px);
+}
+
+/* Layout para PC */
+@media (min-width: 768px) {
+  .container {
+    max-width: 1000px;
+    padding: 40px;
+  }
+  
+  .page-header {
+    max-width: 800px;
+    margin: 0 auto 30px auto;
+  }
+  
+  .content-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .profile-container {
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  
+  .workout-header,
+  .diet-header {
+    max-width: 800px;
+    margin: 0 auto 30px auto;
+  }
+  
+  .daily-goal-card,
+  .meals-section {
+    max-width: 800px;
+    margin: 20px auto;
+  }
+  
+  .action-buttons {
+    max-width: 800px;
+    margin: 20px auto;
+  }
+}
+
+/* Layout para Mobile */
+@media (max-width: 767px) {
+  .container {
+    max-width: 100%;
+    padding: 15px;
+  }
+  
+  .page-header {
+    margin-bottom: 20px;
+  }
+}
+
+/* Headers consistentes */
+.page-header {
+  background: #0d7a00;
+  color: #fff;
+  padding: 20px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  border-radius: 0 0 20px 20px;
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.back-btn {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #8fd19e;
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-size: 18px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.back-btn:hover {
+  background: #7bc08a;
+  transform: translateY(-50%) scale(1.05);
+}
+
+/* Botões principais */
+.btn-primary {
+  background: #8fd19e;
+  color: #121212;
+  border: none;
+  padding: 15px 25px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  min-height: 50px;
+}
+
+.btn-primary:hover {
+  background: #7bc08a;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(143, 209, 158, 0.3);
+  text-decoration: none;
+  color: #121212;
+}
+
+.btn-secondary {
+  background: #333;
+  color: #fff;
+  border: 1px solid #555;
+  padding: 15px 25px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  min-height: 50px;
+}
+
+.btn-secondary:hover {
+  background: #444;
+  border-color: #8fd19e;
+  transform: translateY(-2px);
+  text-decoration: none;
+  color: #fff;
+}
+
+.btn-danger {
+  background: #e74c3c;
+  color: #fff;
+  border: none;
+  padding: 15px 25px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  min-height: 50px;
+}
+
+.btn-danger:hover {
+  background: #c0392b;
+  transform: translateY(-2px);
+  text-decoration: none;
+  color: #fff;
+}
+
+/* Cards */
+.card {
+  background: #2a2a2a;
+  border-radius: 15px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 15px rgba(143, 209, 158, 0.1);
+  border: 1px solid rgba(143, 209, 158, 0.2);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.card-title {
+  color: #8fd19e;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* Inputs */
+.form-input {
+  width: 100%;
+  padding: 15px;
+  border: 2px solid #444;
+  border-radius: 10px;
+  background: #333;
+  color: #fff;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #8fd19e;
+}
+
+/* Remove spinners from number inputs */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Remove spinners from all number inputs globally */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.form-label {
+  display: block;
+  color: #8fd19e;
+  font-weight: bold;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+/* Ícones grandes */
+.icon-large {
+  font-size: 64px;
+  color: #8fd19e;
+  margin-bottom: 20px;
+}
+
+/* Texto de estado vazio */
+.empty-state {
+  text-align: center;
+  color: #888;
+  margin: 40px 0;
+  font-size: 16px;
+}
+
+.empty-state p {
+  margin: 10px 0;
+  line-height: 1.5;
+}
+
+/* Responsividade */
+@media (max-width: 480px) {
+  .container {
+    padding: 15px;
+  }
+  
+  .page-header {
+    padding: 15px;
+    font-size: 16px;
+  }
+  
+  .back-btn {
+    font-size: 16px;
+    left: 15px;
+    width: 36px;
+    height: 36px;
+  }
+  
+  footer nav a {
+    font-size: 10px;
+    padding: 6px 8px;
+    min-width: 50px;
+  }
+  
+  footer nav a i {
+    font-size: 16px;
+  }
+  
+  footer nav a.active i {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+}

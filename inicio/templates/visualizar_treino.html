@@ -1,0 +1,656 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Visualizar Treino - Nutra</title>
+  <link rel="stylesheet" href="{% static 'inicio/css/perfil.css' %}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    body {
+      padding-bottom: 200px;
+      min-height: calc(100vh + 200px);
+    }
+    
+    .post-header {
+      background: #232323;
+      border-radius: 12px;
+      margin: 20px;
+      padding: 20px;
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .user-avatar {
+      width: 50px;
+      height: 50px;
+      background: #333;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 15px;
+      color: #8fd19e;
+      font-size: 20px;
+    }
+    .user-details h3 {
+      color: #fff;
+      margin: 0 0 5px 0;
+      font-size: 16px;
+    }
+    .user-details p {
+      color: #888;
+      margin: 0;
+      font-size: 14px;
+    }
+    .workout-title {
+      color: #fff;
+      font-size: 20px;
+      font-weight: bold;
+      margin: 0 0 15px 0;
+    }
+    .workout-stats {
+      display: flex;
+      gap: 30px;
+      margin-bottom: 20px;
+      justify-content: center;
+    }
+    .stat-item {
+      text-align: center;
+      flex: 1;
+      max-width: 80px;
+    }
+    .stat-label {
+      color: #888;
+      font-size: 12px;
+      margin-bottom: 5px;
+    }
+    .stat-value {
+      color: #8fd19e;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .exercises-list {
+      background: #232323;
+      border-radius: 12px;
+      margin: 20px;
+      padding: 20px;
+    }
+    .exercises-title {
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+    .exercise-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+      padding: 15px;
+      background: #2a2a2a;
+      border-radius: 8px;
+    }
+    .exercise-item:last-child {
+      margin-bottom: 0;
+    }
+    .exercise-icon {
+      width: 40px;
+      height: 40px;
+      background: #333;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 15px;
+      color: #8fd19e;
+    }
+    .exercise-details {
+      flex: 1;
+    }
+    .exercise-name {
+      color: #8fd19e;
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .exercise-sets {
+      color: #888;
+      font-size: 14px;
+    }
+    .action-buttons {
+      position: relative;
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      margin: 40px 20px;
+      padding-bottom: 40px;
+    }
+    .action-btn {
+      background: linear-gradient(135deg, #4caf50, #388e3c);
+      color: #fff;
+      border: none;
+      padding: 15px 25px;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+      transition: all 0.3s;
+    }
+    .action-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+    }
+    .action-btn.secondary {
+      background: linear-gradient(135deg, #666, #555);
+    }
+    .action-btn.secondary:hover {
+      box-shadow: 0 6px 20px rgba(102, 102, 102, 0.4);
+    }
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: #8fd19e;
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      font-size: 18px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+      z-index: 1000;
+    }
+    .back-btn:hover {
+      background: #7bc08a;
+      transform: scale(1.05);
+    }
+    
+    /* Custom Modal Styles */
+    .custom-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .custom-modal-content {
+      background: #232323;
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    
+    .modal-icon {
+      font-size: 48px;
+      margin-bottom: 20px;
+    }
+    
+    .modal-icon.success {
+      color: #4caf50;
+    }
+    
+    .modal-title {
+      color: #fff;
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+    
+    .modal-message {
+      color: #888;
+      font-size: 16px;
+      margin-bottom: 25px;
+      line-height: 1.5;
+    }
+    
+    .modal-buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+    }
+    
+    .modal-btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      min-width: 100px;
+    }
+    
+    .modal-btn.primary {
+      background: linear-gradient(135deg, #4caf50, #388e3c);
+      color: #fff;
+    }
+    
+    .modal-btn.primary:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+    }
+    
+    /* Muscle Distribution Chart */
+    .muscle-chart-container {
+      background: #232323;
+      border-radius: 12px;
+      margin: 20px;
+      padding: 25px;
+      text-align: center;
+    }
+    
+    .chart-title {
+      color: #8fd19e;
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+    
+    .chart-wrapper {
+      position: relative;
+      width: 180px;
+      height: 180px;
+      margin: 0 auto 20px auto;
+    }
+    
+    .muscle-chart {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: conic-gradient(var(--chart-colors));
+      position: relative;
+      box-shadow: 0 4px 15px rgba(143, 209, 158, 0.2);
+    }
+    
+    .chart-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100px;
+      height: 100px;
+      background: #232323;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #8fd19e;
+      font-size: 12px;
+      font-weight: bold;
+      text-align: center;
+      line-height: 1.2;
+    }
+    
+    .chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+      margin-top: 15px;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+    }
+    
+    .legend-color {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 2px solid #333;
+    }
+    
+    .legend-text {
+      color: #fff;
+      font-weight: 500;
+    }
+    
+    .legend-count {
+      color: #8fd19e;
+      font-weight: bold;
+    }
+    
+    .no-data-message {
+      color: #888;
+      font-size: 16px;
+      margin: 40px 0;
+      text-align: center;
+    }
+    
+    .no-data-message i {
+      font-size: 48px;
+      margin-bottom: 15px;
+      color: #444;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" style="padding-top: 0;">
+    <a href="{% url 'montar_treino_detalhes' %}" class="back-btn">
+      <i class="fas fa-arrow-left"></i>
+    </a>
+
+    <div class="post-header">
+      <h2 class="workout-title" id="workoutTitle">Meu Treino</h2>
+      
+      <div class="workout-stats">
+        <div class="stat-item">
+          <div class="stat-label">Tempo</div>
+          <div class="stat-value" id="workoutTime">0min</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Volume</div>
+          <div class="stat-value" id="workoutVolume">0 kg</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Séries</div>
+          <div class="stat-value" id="workoutSets">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Muscle Distribution Chart -->
+    <div class="muscle-chart-container">
+      <h3 class="chart-title">Distribuição por Músculo</h3>
+      <div id="muscleChartContainer">
+        <!-- Gráfico será carregado dinamicamente aqui -->
+      </div>
+    </div>
+
+    <div class="exercises-list">
+      <h3 class="exercises-title">Treinamento</h3>
+      <div id="exercisesList">
+        <!-- Exercícios serão carregados dinamicamente aqui -->
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <button class="action-btn secondary" onclick="discardWorkout()">Descartar</button>
+      <button class="action-btn secondary" onclick="saveWorkout()">Salvar Treino</button>
+      <button class="action-btn" onclick="startNewWorkout()">Novo Treino</button>
+    </div>
+  </div>
+
+  <!-- Custom Success Modal -->
+  <div class="custom-modal" id="saveModal">
+    <div class="custom-modal-content">
+      <div class="modal-icon success">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <h3 class="modal-title">Treino Salvo!</h3>
+      <p class="modal-message">Seu treino foi salvo com sucesso e está disponível na sua lista de treinos.</p>
+      <div class="modal-buttons">
+        <button class="modal-btn primary" onclick="closeSaveModal()">Continuar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Discard Confirmation Modal -->
+  <div class="custom-modal" id="discardModal">
+    <div class="custom-modal-content">
+      <div class="modal-icon warning">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <h3 class="modal-title">Descartar Treino</h3>
+      <p class="modal-message">
+        Tem certeza que deseja descartar este treino?<br>
+        Todos os dados serão perdidos.
+      </p>
+      <div class="modal-buttons">
+        <button class="modal-btn secondary" onclick="closeDiscardModal()">Cancelar</button>
+        <button class="modal-btn primary" onclick="confirmDiscard()">Descartar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let workoutData = {};
+
+    // Carregar dados do treino
+    function loadWorkoutData() {
+      const savedData = localStorage.getItem('workoutData');
+      if (savedData) {
+        workoutData = JSON.parse(savedData);
+        renderWorkout();
+      } else {
+        // Se não há dados, redirecionar para montar treino
+        window.location.href = "{% url 'montar_treino' %}";
+      }
+    }
+
+    // Renderizar treino
+    function renderWorkout() {
+      // Atualizar título
+      document.getElementById('workoutTitle').textContent = workoutData.name;
+      
+      // Calcular estatísticas
+      let totalVolume = 0;
+      let totalSets = 0;
+      
+      workoutData.exercises.forEach(exercise => {
+        exercise.sets.forEach(set => {
+          const weight = parseFloat(set.weight) || 0;
+          const reps = parseInt(set.reps) || 0;
+          
+          if (weight > 0 && reps > 0) {
+            totalVolume += weight * reps;
+          }
+          totalSets++;
+        });
+      });
+      
+      // Atualizar estatísticas
+      document.getElementById('workoutVolume').textContent = `${Math.round(totalVolume)} kg`;
+      document.getElementById('workoutSets').textContent = totalSets;
+      
+      // Calcular tempo (usar tempo de conclusão se disponível)
+      const startTime = new Date(workoutData.startTime);
+      const endTime = workoutData.endTime ? new Date(workoutData.endTime) : new Date();
+      const duration = Math.floor((endTime - startTime) / 1000 / 60);
+      document.getElementById('workoutTime').textContent = `${duration}min`;
+      
+      // Renderizar gráfico de distribuição de músculos
+      renderMuscleChart();
+      
+      // Renderizar exercícios
+      const exercisesList = document.getElementById('exercisesList');
+      exercisesList.innerHTML = '';
+      
+      workoutData.exercises.forEach(exercise => {
+        const exerciseItem = document.createElement('div');
+        exerciseItem.className = 'exercise-item';
+        
+        exerciseItem.innerHTML = `
+          <div class="exercise-icon">
+            <i class="fas fa-dumbbell"></i>
+          </div>
+          <div class="exercise-details">
+            <div class="exercise-name">${exercise.name}</div>
+            <div class="exercise-sets">${exercise.sets.length} sets</div>
+          </div>
+        `;
+        
+        exercisesList.appendChild(exerciseItem);
+      });
+    }
+    
+    // Renderizar gráfico de distribuição de músculos
+    function renderMuscleChart() {
+      const container = document.getElementById('muscleChartContainer');
+      
+      // Contar exercícios por músculo
+      const muscleCount = {};
+      workoutData.exercises.forEach(exercise => {
+        const muscle = exercise.muscle || 'Outros';
+        muscleCount[muscle] = (muscleCount[muscle] || 0) + 1;
+      });
+      
+      const totalExercises = workoutData.exercises.length;
+      
+      if (totalExercises === 0) {
+        container.innerHTML = `
+          <div class="no-data-message">
+            <i class="fas fa-chart-pie"></i>
+            <p>Nenhum exercício para exibir</p>
+          </div>
+        `;
+        return;
+      }
+      
+      // Cores para cada músculo
+      const muscleColors = {
+        'Peito': '#4caf50',
+        'Ombro': '#2196f3',
+        'Tríceps': '#ff9800',
+        'Bíceps': '#9c27b0',
+        'Costas': '#f44336',
+        'Quadríceps': '#00bcd4',
+        'Posterior': '#795548',
+        'Panturrilha': '#607d8b',
+        'Outros': '#9e9e9e'
+      };
+      
+      // Gerar gradiente conic-gradient
+      let currentAngle = 0;
+      let chartColors = '';
+      let legendItems = '';
+      
+      Object.entries(muscleCount).forEach(([muscle, count], index) => {
+        const percentage = (count / totalExercises) * 100;
+        const angle = (percentage / 100) * 360;
+        const color = muscleColors[muscle] || '#9e9e9e';
+        
+        chartColors += `${color} ${currentAngle}deg ${currentAngle + angle}deg`;
+        if (index < Object.entries(muscleCount).length - 1) {
+          chartColors += ', ';
+        }
+        
+        legendItems += `
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: ${color}"></div>
+            <span class="legend-text">${muscle}</span>
+            <span class="legend-count">${count}</span>
+          </div>
+        `;
+        
+        currentAngle += angle;
+      });
+      
+      container.innerHTML = `
+        <div class="chart-wrapper">
+          <div class="muscle-chart" style="--chart-colors: ${chartColors}">
+            <div class="chart-center">
+              ${totalExercises}<br>exercícios
+            </div>
+          </div>
+        </div>
+        <div class="chart-legend">
+          ${legendItems}
+        </div>
+      `;
+    }
+
+    // Descartar treino - mostrar modal de confirmação
+    function discardWorkout() {
+      document.getElementById('discardModal').style.display = 'flex';
+    }
+    
+    // Fechar modal de descarte
+    function closeDiscardModal() {
+      document.getElementById('discardModal').style.display = 'none';
+    }
+    
+    // Confirmar descarte do treino
+    function confirmDiscard() {
+      // Limpar dados do treino do localStorage
+      localStorage.removeItem('workoutData');
+      localStorage.removeItem('selectedExercises');
+      
+      // Redirecionar para página principal de treinos
+      window.location.href = "{% url 'treino' %}";
+    }
+    
+    // Salvar treino
+    function saveWorkout() {
+      // Criar chave única para o usuário
+      const userId = '{{ user.id }}';
+      const userWorkoutsKey = `savedWorkouts_${userId}`;
+      
+      // Salvar o treino na lista de treinos salvos do usuário específico
+      const savedWorkouts = JSON.parse(localStorage.getItem(userWorkoutsKey) || '[]');
+      
+      savedWorkouts.push({
+        ...workoutData,
+        id: Date.now(),
+        userId: userId,
+        savedAt: new Date().toISOString()
+      });
+      localStorage.setItem(userWorkoutsKey, JSON.stringify(savedWorkouts));
+      
+      // Show custom success modal
+      document.getElementById('saveModal').style.display = 'flex';
+    }
+    
+    function closeSaveModal() {
+      document.getElementById('saveModal').style.display = 'none';
+      
+      // Limpar dados temporários do localStorage
+      localStorage.removeItem('selectedExercises');
+      localStorage.removeItem('workoutData');
+      
+      // Redirecionar para a página de treinos
+      window.location.href = "{% url 'treino' %}";
+    }
+
+    // Iniciar novo treino
+    function startNewWorkout() {
+      // Limpar dados do localStorage
+      localStorage.removeItem('workoutData');
+      localStorage.removeItem('selectedExercises');
+      
+      // Redirecionar para montar treino
+      window.location.href = "{% url 'montar_treino' %}";
+    }
+
+    // Carregar dados ao iniciar
+    loadWorkoutData();
+    
+    // Close modal when clicking outside
+    document.getElementById('saveModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeSaveModal();
+      }
+    });
+    
+    document.getElementById('discardModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeDiscardModal();
+      }
+    });
+  </script>
+</body>
+</html> 

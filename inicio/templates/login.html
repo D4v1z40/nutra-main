@@ -1,0 +1,349 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nutra - Login</title>
+    <link rel="stylesheet" href="{% static 'inicio/css/login.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: #8fd19e;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .logo {
+            width: 120px;
+            height: auto;
+            margin-bottom: 20px;
+        }
+        
+        h2 {
+            color: #4CAF50;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+        
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        
+        .input-group input:focus {
+            outline: none;
+            border-color: #8fd19e;
+        }
+        
+        .password-toggle {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .toggle-btn {
+            position: absolute;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 16px;
+            transition: color 0.3s;
+            z-index: 10;
+        }
+        
+        .toggle-btn:hover {
+            color: #8fd19e;
+        }
+        
+        .input-group input[type="password"] {
+            padding-right: 45px;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: #8fd19e;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-bottom: 20px;
+        }
+        
+        .btn:hover {
+            background: #7bc08a;
+        }
+        
+        .register-link {
+            color: #666;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        .register-link span {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        
+        .forgot-password {
+            color: #666;
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 20px;
+            display: block;
+        }
+        
+        .forgot-password span {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        
+        /* Django Messages Styles */
+        .django-message-error {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            color: white;
+            border-left: 4px solid #d32f2f;
+        }
+        
+        .django-message-success {
+            background: linear-gradient(135deg, #4caf50, #388e3c);
+            color: white;
+            border-left: 4px solid #388e3c;
+        }
+        
+        .django-message-warning {
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+            color: white;
+            border-left: 4px solid #f57c00;
+        }
+        
+        .django-message-info {
+            background: linear-gradient(135deg, #2196f3, #1976d2);
+            color: white;
+            border-left: 4px solid #1976d2;
+        }
+        
+        .django-message {
+            animation: slideInDown 0.5s ease;
+        }
+        
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <img src="{% static 'inicio/img/Logo.png' %}" alt="Logo Nutra" class="logo"> 
+        <h2>Login</h2>
+        
+        <!-- Django Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="django-message django-message-{{ message.tags }}" style="margin-bottom: 20px; padding: 15px; border-radius: 10px; text-align: center; font-weight: 500; position: relative; cursor: pointer;" onclick="this.style.display='none'">
+                    <i class="fas fa-{% if message.tags == 'error' %}exclamation-circle{% elif message.tags == 'success' %}check-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}" style="margin-right: 8px;"></i>
+                    {{ message }}
+                    <button type="button" onclick="this.parentElement.style.display='none'" style="position: absolute; top: 5px; right: 10px; background: none; border: none; color: white; cursor: pointer; font-size: 16px;">×</button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        <!-- Notification System -->
+        <div id="notificationContainer" style="position: fixed; top: 20px; right: 20px; z-index: 10000; pointer-events: none;"></div>
+        
+        <form action="{% url 'login' %}" method="post" class="login-form" id="loginForm">
+            {% csrf_token %}
+            <div class="input-group">
+                <input type="email" name="username" id="username" placeholder="Email" required>
+            </div>
+            <div class="input-group">
+                <span class="input-icon"><i class="fa fa-lock"></i></span>
+                <div class="password-toggle">
+                    <input type="password" name="senha" id="senha" placeholder="Senha" required>
+                    <button type="button" class="toggle-btn" onclick="togglePassword()">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+            <button type="submit" class="btn">Entrar</button>
+        </form>
+        <a href="{% url 'forgot_password' %}" class="forgot-password">Esqueceu sua senha? <span>Redefinir</span></a>
+        <a href="{% url 'register' %}" class="register-link">Não tem uma conta? <span>Cadastrar</span></a>
+    </div>
+
+    <script>
+        // Toggle password visibility
+        function togglePassword() {
+            const passwordInput = document.getElementById('senha');
+            const toggleBtn = document.querySelector('.toggle-btn i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleBtn.className = 'fas fa-eye-slash';
+            } else {
+                passwordInput.type = 'password';
+                toggleBtn.className = 'fas fa-eye';
+            }
+        }
+        
+        // Notification system
+        function showNotification(message, type = 'info', duration = 3000) {
+            const container = document.getElementById('notificationContainer');
+            const notification = document.createElement('div');
+            
+            notification.className = `notification notification-${type}`;
+            notification.style.cssText = `
+                background: ${type === 'success' ? 'linear-gradient(135deg, #4caf50, #388e3c)' : 
+                              type === 'error' ? 'linear-gradient(135deg, #f44336, #d32f2f)' : 
+                              type === 'warning' ? 'linear-gradient(135deg, #ff9800, #f57c00)' : 
+                              'linear-gradient(135deg, #2196f3, #1976d2)'};
+                color: white;
+                padding: 15px 20px;
+                border-radius: 10px;
+                margin-bottom: 10px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+                pointer-events: auto;
+                max-width: 300px;
+                font-size: 14px;
+                font-weight: 500;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            `;
+            
+            const icon = document.createElement('i');
+            icon.className = type === 'success' ? 'fas fa-check-circle' :
+                            type === 'error' ? 'fas fa-exclamation-circle' :
+                            type === 'warning' ? 'fas fa-exclamation-triangle' :
+                            'fas fa-info-circle';
+            
+            const text = document.createElement('span');
+            text.textContent = message;
+            
+            notification.appendChild(icon);
+            notification.appendChild(text);
+            container.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+            
+            // Auto remove
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, duration);
+            
+            // Click to dismiss
+            notification.addEventListener('click', () => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            });
+        }
+
+        // Form validation
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            const email = document.getElementById('username').value.trim();
+            const senha = document.getElementById('senha').value.trim();
+            
+            if (!email) {
+                e.preventDefault();
+                showNotification('Por favor, preencha o campo email', 'warning');
+                document.getElementById('username').focus();
+                return;
+            }
+            
+            // Validação básica de email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                e.preventDefault();
+                showNotification('Por favor, insira um email válido', 'warning');
+                document.getElementById('username').focus();
+                return;
+            }
+            
+            if (!senha) {
+                e.preventDefault();
+                showNotification('Por favor, preencha o campo senha', 'warning');
+                document.getElementById('senha').focus();
+                return;
+            }
+        });
+
+        // Page entrance animation
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.querySelector('.login-container');
+            container.style.opacity = '0';
+            container.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                container.style.transition = 'all 0.5s ease';
+                container.style.opacity = '1';
+                container.style.transform = 'translateY(0)';
+            }, 100);
+            
+            // Auto-dismiss Django messages after 5 seconds
+            const djangoMessages = document.querySelectorAll('.django-message');
+            djangoMessages.forEach(message => {
+                setTimeout(() => {
+                    message.style.transition = 'opacity 0.5s ease';
+                    message.style.opacity = '0';
+                    setTimeout(() => {
+                        message.style.display = 'none';
+                    }, 500);
+                }, 5000);
+            });
+        });
+    </script>
+</body>
+</html>
