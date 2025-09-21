@@ -1126,7 +1126,7 @@
       
       <div class="calorie-summary">
         <div>
-          <div class="calorie-consumed" id="caloriesConsumed">{{ total_calories_consumed|default:0 }}</div>
+          <div class="calorie-consumed" id="caloriesConsumed">{{ total_calories_consumed|default:0|floatformat:0 }}</div>
           <div class="calorie-consumed-label">Consumidas</div>
         </div>
         
@@ -1142,25 +1142,25 @@
         <div class="macro-card" id="carbsCard">
           <div class="macro-progress-bar" id="carbsProgress"></div>
           <div class="macro-name">Carboidratos</div>
-          <div class="macro-value" id="carbsConsumed">{{ total_carbs_consumed|default:0 }}g</div>
+          <div class="macro-value" id="carbsConsumed">{{ total_carbs_consumed|default:0|floatformat:1 }}g</div>
           <div class="macro-remaining">/ {{ profile.carbs_goal|default:250 }}g</div>
         </div>
         <div class="macro-card" id="proteinCard">
           <div class="macro-progress-bar" id="proteinProgress"></div>
           <div class="macro-name">Proteínas</div>
-          <div class="macro-value" id="proteinConsumed">{{ total_protein_consumed|default:0 }}g</div>
+          <div class="macro-value" id="proteinConsumed">{{ total_protein_consumed|default:0|floatformat:1 }}g</div>
           <div class="macro-remaining">/ {{ profile.protein_goal|default:150 }}g</div>
         </div>
         <div class="macro-card" id="fatCard">
           <div class="macro-progress-bar" id="fatProgress"></div>
           <div class="macro-name">Gorduras</div>
-          <div class="macro-value" id="fatConsumed">{{ total_fat_consumed|default:0 }}g</div>
+          <div class="macro-value" id="fatConsumed">{{ total_fat_consumed|default:0|floatformat:1 }}g</div>
           <div class="macro-remaining">/ {{ profile.fat_goal|default:80 }}g</div>
         </div>
         <div class="macro-card" id="fiberCard">
           <div class="macro-progress-bar" id="fiberProgress"></div>
           <div class="macro-name">Fibras</div>
-          <div class="macro-value" id="fiberConsumed">{{ total_fiber_consumed|default:0 }}g</div>
+          <div class="macro-value" id="fiberConsumed">{{ total_fiber_consumed|default:0|floatformat:1 }}g</div>
           <div class="macro-remaining">/{{ profile.fiber_goal|default:30 }}g</div>
         </div>
       </div>
