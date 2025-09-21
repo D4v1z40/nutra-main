@@ -113,17 +113,22 @@ USE_I18N = True
 
 USE_TZ = True
 
+# Configurações de formatação numérica
+USE_L10N = False
+DECIMAL_SEPARATOR = '.'
+THOUSAND_SEPARATOR = ','
+NUMBER_GROUPING = 3
+
 # Redirecionamento da Autenticação
 LOGIN_REDIRECT_URL = '/'
 LOGIN_URL = '/inicio/login/'
-
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [ os.path.join(BASE_DIR, 'templates/static') ]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'templates/static')]
 
 # Media files (uploads)
 MEDIA_URL = '/media/'

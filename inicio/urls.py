@@ -1,6 +1,5 @@
 from django.urls import path
 from . import views
-from django.contrib.auth import views as auth_views
 
 urlpatterns = [
 
@@ -26,12 +25,10 @@ urlpatterns = [
          name='montar_treino_detalhes'),
     path('visualizar_treino/', views.visualizar_treino, name='visualizar_treino'),
 
-    # APIs do sistema de dieta
-    path('api/profile/update/', views.update_profile, name='update_profile'),
-    path('api/password/change/', views.change_password, name='change_password'),
-    path('api/personal-data/update/', views.update_personal_data,
-         name='update_personal_data'),
     path('api/foods/search/', views.search_foods, name='search_foods'),
+    path('api/profile/basic-update/', views.update_basic_profile,
+         name='update_basic_profile'),
+    path('api/password/change/', views.change_password, name='change_password'),
     path('api/meals/<int:meal_id>/delete/',
          views.delete_meal, name='delete_meal'),
     path('api/meals/<int:meal_id>/', views.get_meal, name='get_meal'),

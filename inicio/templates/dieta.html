@@ -151,6 +151,21 @@
         transparent var(--progress-total, 0deg)
       );
       z-index: 0;
+      transition: all 0.8s ease;
+    }
+    
+    .calorie-circle.exceeded::after {
+      background: conic-gradient(
+        #e74c3c 0deg, 
+        #e74c3c var(--progress-green, 0deg), 
+        #e74c3c var(--progress-green, 0deg), 
+        #e74c3c var(--progress-total, 0deg), 
+        transparent var(--progress-total, 0deg)
+      );
+    }
+    
+    .calorie-circle.exceeded .calorie-content {
+      color: #e74c3c;
     }
     
     .calorie-content {
@@ -553,18 +568,6 @@
       transform: translateY(-2px);
     }
     
-    .btn-replicate {
-      background: #333;
-      color: #fff;
-      border: 1px solid #555;
-    }
-    
-    .btn-replicate:hover {
-      background: #444;
-      border-color: #8fd19e;
-      transform: translateY(-2px);
-    }
-    
     .btn-clear {
       background: #e74c3c;
       color: #fff;
@@ -585,6 +588,22 @@
       background: rgba(0, 0, 0, 0.8);
       z-index: 1000;
       display: none;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 20px;
+      overflow: hidden;
+      padding-top: 5vh;
+    }
+    
+    .alert-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 2000;
+      display: none;
       align-items: center;
       justify-content: center;
       padding: 20px;
@@ -600,7 +619,7 @@
       text-align: center;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
       margin: 0;
-      max-height: calc(100vh - 40px);
+      max-height: calc(90vh - 40px);
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       position: relative;
@@ -721,6 +740,10 @@
     
     .modal-icon.success {
       color: #4CAF50;
+    }
+    
+    .modal-icon.warning {
+      color: #f39c12;
     }
     
     .modal-icon.error {
@@ -954,6 +977,14 @@
       line-height: 1.5;
     }
     
+    .modal-submessage {
+      color: #999;
+      font-size: 14px;
+      margin-bottom: 20px;
+      font-style: italic;
+      line-height: 1.4;
+    }
+    
     .modal-title {
       color: #fff;
       font-size: 20px;
@@ -1130,7 +1161,7 @@
           <div class="macro-progress-bar" id="fiberProgress"></div>
           <div class="macro-name">Fibras</div>
           <div class="macro-value" id="fiberConsumed">{{ total_fiber_consumed|default:0 }}g</div>
-          <div class="macro-remaining">Total</div>
+          <div class="macro-remaining">/{{ profile.fiber_goal|default:30 }}g</div>
         </div>
       </div>
     </div>
@@ -1203,9 +1234,6 @@
       <button class="action-btn btn-add-meal" onclick="openAddMealModal()">
         <i class="fas fa-plus"></i> Adicionar refeição
       </button>
-      <button class="action-btn btn-replicate" onclick="replicateDay()">
-        <i class="fas fa-copy"></i> Replicar dia
-      </button>
       <button class="action-btn btn-clear" onclick="clearDay()">
         <i class="fas fa-broom"></i> Limpar dia
       </button>
@@ -1250,6 +1278,13 @@
                  min="30" max="150" required>
         </div>
         
+        <div class="form-group">
+          <label for="fiberGoal">Fibras (g)</label>
+          <input type="number" id="fiberGoal" name="fiber_goal" 
+                 value="{{ profile.fiber_goal|default:30 }}" 
+                 min="10" max="100" required>
+        </div>
+        
         <div class="modal-buttons">
           <button type="button" class="modal-btn secondary" onclick="closeGoalModal()">Cancelar</button>
           <button type="submit" class="modal-btn primary">Salvar Metas</button>
@@ -1259,7 +1294,7 @@
   </div>
 
   <!-- Meal Success Modal -->
-  <div class="custom-modal" id="mealSuccessModal">
+  <div class="alert-modal" id="mealSuccessModal">
     <div class="custom-modal-content success-modal">
       <div class="modal-icon success">
         <i class="fas fa-check-circle"></i>
@@ -1273,7 +1308,7 @@
   </div>
 
   <!-- Error Modal -->
-  <div class="custom-modal" id="errorModal">
+  <div class="alert-modal" id="errorModal">
     <div class="custom-modal-content">
       <div class="modal-icon error">
         <i class="fas fa-exclamation-triangle"></i>
@@ -1286,8 +1321,24 @@
     </div>
   </div>
 
+  <!-- Clear Day Confirmation Modal -->
+  <div class="alert-modal" id="clearDayModal">
+    <div class="custom-modal-content">
+      <div class="modal-icon warning">
+        <i class="fas fa-broom"></i>
+      </div>
+      <h3 class="modal-title">Limpar Dia</h3>
+      <p class="modal-message">Tem certeza que deseja limpar todos os dados do dia?</p>
+      <p class="modal-submessage">Esta ação não pode ser desfeita.</p>
+      <div class="modal-buttons">
+        <button class="modal-btn secondary" onclick="closeClearDayModal()">Cancelar</button>
+        <button class="modal-btn danger" onclick="confirmClearDay()">Limpar Dia</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Delete Confirmation Modal -->
-  <div class="custom-modal" id="deleteConfirmModal">
+  <div class="alert-modal" id="deleteConfirmModal">
     <div class="custom-modal-content">
       <div class="modal-icon error">
         <i class="fas fa-exclamation-triangle"></i>
@@ -1447,6 +1498,14 @@
           </div>
         </div>
         
+        <!-- Seção de alimentos adicionados -->
+        <div id="editMealItems" class="meal-items" style="display: none;">
+          <h4>Alimentos Adicionados:</h4>
+          <div id="editMealItemsList">
+            <!-- Alimentos serão adicionados aqui dinamicamente -->
+          </div>
+        </div>
+        
         <div class="modal-buttons">
           <button type="button" class="modal-btn secondary" onclick="closeEditMealModal()">Cancelar</button>
           <button type="button" class="modal-btn primary" onclick="saveEditedMeal()">Salvar Alterações</button>
@@ -1494,45 +1553,74 @@
       }, 100);
       
       // Event listener para o formulário de metas
-      document.getElementById('goalForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        saveGoals();
-      });
+      const goalForm = document.getElementById('goalForm');
+      if (goalForm) {
+        goalForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          saveGoals();
+        });
+      }
       
       // Event listener para fechar modal ao clicar fora
-      document.getElementById('goalModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-          closeGoalModal();
-        }
-      });
+      const goalModal = document.getElementById('goalModal');
+      if (goalModal) {
+        goalModal.addEventListener('click', function(e) {
+          if (e.target === this) {
+            closeGoalModal();
+          }
+        });
+      }
       
       // Event listener para fechar modal de sucesso ao clicar fora
-      document.getElementById('successModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-          closeSuccessModal();
-        }
-      });
+      const mealSuccessModal = document.getElementById('mealSuccessModal');
+      if (mealSuccessModal) {
+        mealSuccessModal.addEventListener('click', function(e) {
+          if (e.target === this) {
+            closeMealSuccessModal();
+          }
+        });
+      }
       
       // Event listener para fechar modal de adicionar refeição ao clicar fora
-      document.getElementById('addMealModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-          closeAddMealModal();
-        }
-      });
+      const addMealModal = document.getElementById('addMealModal');
+      if (addMealModal) {
+        addMealModal.addEventListener('click', function(e) {
+          if (e.target === this) {
+            closeAddMealModal();
+          }
+        });
+      }
       
       // Event listener para fechar modal de editar refeição ao clicar fora
-      document.getElementById('editMealModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-          closeEditMealModal();
-        }
-      });
+      const editModal = document.getElementById('editMealModal');
+      if (editModal && !editModal.hasAttribute('data-listener-added')) {
+        editModal.addEventListener('click', function(e) {
+          if (e.target === this) {
+            closeEditMealModal();
+          }
+        });
+        editModal.setAttribute('data-listener-added', 'true');
+      }
       
       // Event listener para fechar modal de confirmação de exclusão ao clicar fora
-      document.getElementById('deleteConfirmModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-          closeDeleteConfirmModal();
-        }
-      });
+      const deleteConfirmModal = document.getElementById('deleteConfirmModal');
+      if (deleteConfirmModal) {
+        deleteConfirmModal.addEventListener('click', function(e) {
+          if (e.target === this) {
+            closeDeleteConfirmModal();
+          }
+        });
+      }
+      
+      // Event listener para fechar modal de limpar dia ao clicar fora
+      const clearDayModal = document.getElementById('clearDayModal');
+      if (clearDayModal) {
+        clearDayModal.addEventListener('click', function(e) {
+          if (e.target === this) {
+            closeClearDayModal();
+          }
+        });
+      }
       
       // Event listeners para atualizar preview nutricional
       // Removido - será adicionado dinamicamente para cada item
@@ -1573,8 +1661,19 @@
       const consumed = parseInt(consumedElement.textContent) || 0;
       const goal = parseInt(goalElement.textContent) || 2000;
       const remaining = Math.max(0, goal - consumed);
+      const exceeded = Math.max(0, consumed - goal);
       
-      remainingElement.textContent = remaining;
+      // Atualizar texto baseado se ultrapassou ou não
+      if (exceeded > 0) {
+        remainingElement.textContent = `+${exceeded}`;
+        remainingElement.style.color = '#e74c3c'; // Vermelho para ultrapassagem
+      } else {
+        remainingElement.textContent = remaining;
+        remainingElement.style.color = '#8fd19e'; // Verde para dentro da meta
+      }
+      
+      // Verificar se ultrapassou a meta
+      const hasExceeded = consumed > goal;
       
       // Calcular progresso
       const progressDegrees = Math.min(360, (consumed / goal) * 360);
@@ -1582,6 +1681,15 @@
       // Aplicar progresso ao círculo
       circleElement.style.setProperty('--progress-green', `${progressDegrees}deg`);
       circleElement.style.setProperty('--progress-total', `${progressDegrees}deg`);
+      
+      // Aplicar classe de ultrapassagem se necessário
+      if (hasExceeded) {
+        circleElement.classList.add('exceeded');
+        console.log(`⚠️ META ULTRAPASSADA: ${consumed}/${goal} kcal (+${exceeded} kcal)`);
+      } else {
+        circleElement.classList.remove('exceeded');
+        console.log(`✅ Meta dentro do limite: ${consumed}/${goal} kcal (${remaining} restam)`);
+      }
       
       console.log(`Progresso atualizado: ${consumed}/${goal} kcal (${progressDegrees}deg)`);
     }
@@ -1596,8 +1704,8 @@
       // Gorduras
       updateMacroCard('fat', '{{ profile.fat_goal|default:80 }}');
       
-      // Fibras (sem meta específica, usar 30g como referência)
-      updateMacroCard('fiber', '30');
+      // Fibras
+      updateMacroCard('fiber', '{{ profile.fiber_goal|default:30 }}');
     }
     
     function updateMacroCard(macroType, goalValue) {
@@ -1672,6 +1780,28 @@
       }, 3000);
     }
     
+    function showGoalsSuccessModal() {
+      const modal = document.getElementById('mealSuccessModal');
+      const body = document.body;
+      
+      // Prevenir scroll da página de fundo
+      body.style.overflow = 'hidden';
+      
+      // Atualizar mensagem
+      const title = modal.querySelector('.modal-title');
+      const message = modal.querySelector('.modal-message');
+      
+      title.textContent = 'Metas Atualizadas!';
+      message.textContent = 'Suas metas diárias foram salvas com sucesso!';
+      
+      modal.style.display = 'flex';
+      
+      // Auto-fechar após 3 segundos
+      setTimeout(() => {
+        closeMealSuccessModal();
+      }, 3000);
+    }
+    
     function closeSuccessModal() {
       const modal = document.getElementById('successModal');
       const body = document.body;
@@ -1682,19 +1812,21 @@
       modal.style.display = 'none';
     }
     
-    function showMealSuccessModal() {
+    function showMealSuccessModal(message = 'Refeição adicionada com sucesso!') {
       const modal = document.getElementById('mealSuccessModal');
+      const messageElement = modal.querySelector('.modal-message');
       const body = document.body;
+      
+      // Definir mensagem personalizada
+      messageElement.textContent = message;
       
       // Prevenir scroll da página de fundo
       body.style.overflow = 'hidden';
       
       modal.style.display = 'flex';
       
-      // Auto-fechar após 2 segundos
-      setTimeout(() => {
-        closeMealSuccessModal();
-      }, 2000);
+      // REMOVIDO: Auto-fechar após 2 segundos
+      // O modal agora só fecha quando o usuário clicar em "OK"
     }
     
     function closeMealSuccessModal() {
@@ -1705,6 +1837,12 @@
       body.style.overflow = 'auto';
       
       modal.style.display = 'none';
+      
+      // Recarregar página se necessário
+      if (window.shouldReloadPage) {
+        window.shouldReloadPage = false;
+        location.reload();
+      }
     }
     
     function showErrorModal(message) {
@@ -1749,6 +1887,11 @@
       const modal = document.getElementById('editMealModal');
       const body = document.body;
       
+      if (!modal) {
+        console.error('Modal de edição não encontrado!');
+        return;
+      }
+      
       // Restaurar scroll da página
       body.style.overflow = 'auto';
       
@@ -1756,6 +1899,8 @@
       
       // Limpar variáveis globais
       window.currentMealToEdit = null;
+      
+      console.log('DEBUG: Modal de edição fechado com sucesso');
     }
     
     function updateNutritionPreview() {
@@ -1822,11 +1967,13 @@
         const quantityInput = item.querySelector('.quantity-input');
         
         if (foodSelect && foodSelect.value && quantityInput && quantityInput.value) {
-          const calories = parseFloat(foodSelect.dataset.calories) || 0;
-          const protein = parseFloat(foodSelect.dataset.protein) || 0;
-          const carbs = parseFloat(foodSelect.dataset.carbs) || 0;
-          const fat = parseFloat(foodSelect.dataset.fat) || 0;
-          const fiber = parseFloat(foodSelect.dataset.fiber) || 0;
+          // CORRIGIDO: Acessar dados nutricionais da opção selecionada
+          const selectedOption = foodSelect.selectedOptions[0];
+          const calories = parseFloat(selectedOption.dataset.calories) || 0;
+          const protein = parseFloat(selectedOption.dataset.protein) || 0;
+          const carbs = parseFloat(selectedOption.dataset.carbs) || 0;
+          const fat = parseFloat(selectedOption.dataset.fat) || 0;
+          const fiber = parseFloat(selectedOption.dataset.fiber) || 0;
           const quantity = parseFloat(quantityInput.value) || 0;
           
           totalCalories += (calories * quantity) / 100;
@@ -1851,6 +1998,83 @@
       } else {
         preview.style.display = 'none';
       }
+      
+      // Atualizar lista de alimentos adicionados
+      updateEditMealItemsList();
+    }
+    
+    function updateEditMealItemsList() {
+      const container = document.getElementById('editFoodItemsContainer');
+      const items = container.querySelectorAll('.food-item');
+      const mealItemsContainer = document.getElementById('editMealItems');
+      const mealItemsList = document.getElementById('editMealItemsList');
+      
+      // Limpar lista
+      mealItemsList.innerHTML = '';
+      
+      let hasValidItems = false;
+      
+      items.forEach((item, index) => {
+        const foodSelect = item.querySelector('.food-select');
+        const quantityInput = item.querySelector('.quantity-input');
+        
+        if (foodSelect && foodSelect.value && quantityInput && quantityInput.value) {
+          hasValidItems = true;
+          
+          const foodName = foodSelect.options[foodSelect.selectedIndex].text;
+          const quantity = parseFloat(quantityInput.value);
+          
+          // CORRIGIDO: Acessar dados nutricionais da opção selecionada
+          const selectedOption = foodSelect.selectedOptions[0];
+          const calories = parseFloat(selectedOption.dataset.calories) || 0;
+          const protein = parseFloat(selectedOption.dataset.protein) || 0;
+          const carbs = parseFloat(selectedOption.dataset.carbs) || 0;
+          const fat = parseFloat(selectedOption.dataset.fat) || 0;
+          
+          // Debug: verificar dados nutricionais
+          console.log(`DEBUG: Alimento ${index} - Dados nutricionais:`, {
+            foodName: foodName,
+            quantity: quantity,
+            selectedOption: selectedOption,
+            calories: selectedOption.dataset.calories,
+            protein: selectedOption.dataset.protein,
+            carbs: selectedOption.dataset.carbs,
+            fat: selectedOption.dataset.fat
+          });
+          
+          console.log(`DEBUG: Alimento ${index} - Valores calculados:`, {
+            calories: calories,
+            protein: protein,
+            carbs: carbs,
+            fat: fat,
+            caloriesTotal: Math.round(calories * quantity / 100),
+            proteinTotal: Math.round(protein * quantity / 100),
+            carbsTotal: Math.round(carbs * quantity / 100),
+            fatTotal: Math.round(fat * quantity / 100)
+          });
+          
+          const mealItem = document.createElement('div');
+          mealItem.className = 'meal-item';
+          mealItem.innerHTML = `
+            <div class="item-info">
+              <span class="item-name">${foodName}</span>
+              <span class="item-quantity">${quantity}g</span>
+            </div>
+            <div class="item-nutrition">
+              <span class="nutrition-value">${Math.round(calories * quantity / 100)} kcal</span>
+              <span class="nutrition-details">${Math.round(protein * quantity / 100)}p / ${Math.round(carbs * quantity / 100)}c / ${Math.round(fat * quantity / 100)}g</span>
+            </div>
+          `;
+          mealItemsList.appendChild(mealItem);
+        }
+      });
+      
+      // Mostrar/ocultar seção de alimentos
+      if (hasValidItems) {
+        mealItemsContainer.style.display = 'block';
+      } else {
+        mealItemsContainer.style.display = 'none';
+      }
     }
     
     function addMeal() {
@@ -1858,6 +2082,13 @@
       
       const form = document.getElementById('mealForm');
       const formData = new FormData(form);
+      
+      // Validar nome da refeição
+      const mealName = document.getElementById('mealName').value.trim();
+      if (!mealName) {
+        showErrorModal('Por favor, digite um nome para a refeição.');
+        return;
+      }
       
       // Coletar todos os alimentos
       const container = document.getElementById('foodItemsContainer');
@@ -1877,8 +2108,8 @@
       });
       
       if (foods.length === 0) {
-        showErrorModal('Adicione pelo menos um alimento à refeição.');
-        return;
+        console.log('DEBUG: Refeição sem alimentos - permitindo');
+        // Permitir refeições sem alimentos
       }
       
       // Adicionar data atual (usar data local para evitar problemas de timezone)
@@ -1928,10 +2159,8 @@
           // Mostrar modal de sucesso personalizado
           showMealSuccessModal();
           
-          // Atualizar página após sucesso para mostrar a nova refeição
-          setTimeout(() => {
-            window.location.reload();
-          }, 2000);
+          // Definir flag para recarregar a página após fechar o modal de sucesso
+          window.shouldReloadPage = true;
         } else {
           showErrorModal('Erro ao adicionar refeição: ' + data.error);
         }
@@ -1972,10 +2201,12 @@
           const carbsRemaining = document.querySelector('.macro-card:nth-child(1) .macro-remaining');
           const proteinRemaining = document.querySelector('.macro-card:nth-child(2) .macro-remaining');
           const fatRemaining = document.querySelector('.macro-card:nth-child(3) .macro-remaining');
+          const fiberRemaining = document.querySelector('.macro-card:nth-child(4) .macro-remaining');
           
           carbsRemaining.textContent = `/ ${data.carbs_goal}g`;
           proteinRemaining.textContent = `/ ${data.protein_goal}g`;
           fatRemaining.textContent = `/ ${data.fat_goal}g`;
+          fiberRemaining.textContent = `/ ${data.fiber_goal}g`;
           
           // Atualizar círculo de progresso e barras de macronutrientes
           updateProgressCircle();
@@ -1984,15 +2215,16 @@
           // Fechar modal
           closeGoalModal();
           
-          // Mostrar modal de sucesso
-          showSuccessModal();
+          // Mostrar modal de sucesso personalizado
+          showGoalsSuccessModal();
         } else {
-          alert('Erro ao salvar metas: ' + data.error);
+          console.error('Erro ao salvar metas:', data.error);
+          showErrorModal('Erro ao salvar metas: ' + data.error);
         }
       })
       .catch(error => {
         console.error('Erro:', error);
-        alert('Erro ao salvar metas. Tente novamente.');
+        showErrorModal('Erro de conexão. Tente novamente.');
       });
     }
     
@@ -2138,15 +2370,34 @@
       
       if (items.length > 1) {
         items[index].remove();
-        updateRemoveButtons();
+        updateRemoveButtonsEdit();
         updateEditNutritionPreview();
       }
+    }
+    
+    function updateRemoveButtonsEdit() {
+      const container = document.getElementById('editFoodItemsContainer');
+      const items = container.querySelectorAll('.food-item');
+      
+      items.forEach((item, index) => {
+        const removeBtn = item.querySelector('.remove-food-btn');
+        if (items.length > 1) {
+          removeBtn.style.display = 'block';
+        } else {
+          removeBtn.style.display = 'none';
+        }
+      });
     }
     
     function addFoodItemToEdit() {
       const container = document.getElementById('editFoodItemsContainer');
       const currentItems = container.querySelectorAll('.food-item');
       const newIndex = currentItems.length;
+      
+      console.log('DEBUG: addFoodItemToEdit chamada');
+      console.log('DEBUG: Container:', container);
+      console.log('DEBUG: Itens atuais:', currentItems.length);
+      console.log('DEBUG: Novo índice:', newIndex);
       
       const newItem = document.createElement('div');
       newItem.className = 'food-item';
@@ -2193,14 +2444,19 @@
       
       container.appendChild(newItem);
       
+      console.log('DEBUG: Item adicionado ao DOM');
+      console.log('DEBUG: Itens após adição:', container.querySelectorAll('.food-item').length);
+      
       // Adicionar event listeners
       addFoodItemEventListenersForEdit(newIndex);
       
       // Mostrar botões de remoção se necessário
-      updateRemoveButtons();
+      updateRemoveButtonsEdit();
       
       // Atualizar preview nutricional
       updateEditNutritionPreview();
+      
+      console.log('DEBUG: addFoodItemToEdit concluída');
     }
     
     function updateRemoveButtons() {
@@ -2247,16 +2503,145 @@
       }
     }
     
-    function replicateDay() {
-      // Implementar replicação de dia
-      alert('Funcionalidade de replicar dia será implementada');
+    function clearDay() {
+      // Mostrar modal de confirmação personalizado
+      showClearDayModal();
     }
     
-    function clearDay() {
-      if (confirm('Tem certeza que deseja limpar todos os dados do dia?')) {
-        // Implementar limpeza do dia
-        alert('Dia limpo com sucesso!');
+    function showClearDayModal() {
+      const modal = document.getElementById('clearDayModal');
+      const body = document.body;
+      
+      // Prevenir scroll da página de fundo
+      body.style.overflow = 'hidden';
+      
+      modal.style.display = 'flex';
+    }
+    
+    function closeClearDayModal() {
+      const modal = document.getElementById('clearDayModal');
+      const body = document.body;
+      
+      // Restaurar scroll da página
+      body.style.overflow = 'auto';
+      
+      modal.style.display = 'none';
+    }
+    
+    function confirmClearDay() {
+      // Implementar limpeza do dia
+      console.log('Limpando dados do dia...');
+      
+      // Fechar modal de confirmação
+      closeClearDayModal();
+      
+      // Mostrar modal de sucesso personalizado
+      showClearDaySuccessModal();
+      
+      // Fazer requisição para limpar o dia após 1 segundo
+      setTimeout(() => {
+        clearDayRequest();
+      }, 1000);
+    }
+    
+    function clearDayRequest() {
+      // Obter data atual
+      const currentDate = document.getElementById('currentDate').textContent;
+      const dateStr = currentDate.split(' ')[0]; // Pegar apenas a data
+      
+      console.log('Enviando requisição para limpar dia:', dateStr);
+      
+      // Criar FormData
+      const formData = new FormData();
+      formData.append('date', dateStr);
+      
+      // Fazer requisição
+      fetch('{% url "clear_day" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          console.log('Dia limpo com sucesso:', data.message);
+          console.log('Refeições removidas:', data.deleted_count);
+          
+          // Atualizar mensagem de sucesso com detalhes
+          updateClearDaySuccessMessage(data.deleted_count);
+          
+          // Recarregar página após 2 segundos
+          setTimeout(() => {
+            location.reload();
+          }, 2000);
+        } else {
+          console.error('Erro ao limpar dia:', data.error);
+          showErrorModal('Erro ao limpar dia: ' + data.error);
+        }
+      })
+      .catch(error => {
+        console.error('Erro na requisição:', error);
+        showErrorModal('Erro de conexão. Tente novamente.');
+      });
+    }
+    
+    function updateClearDaySuccessMessage(deletedCount) {
+      const modal = document.getElementById('mealSuccessModal');
+      const title = modal.querySelector('.modal-title');
+      const message = modal.querySelector('.modal-message');
+      
+      title.textContent = 'Dia Limpo!';
+      
+      if (deletedCount > 0) {
+        message.textContent = `${deletedCount} refeições foram removidas com sucesso!`;
+      } else {
+        message.textContent = 'Nenhuma refeição encontrada para remover.';
       }
+      
+      // Auto-fechar após 3 segundos
+      setTimeout(() => {
+        closeMealSuccessModal();
+      }, 3000);
+    }
+    
+    function showClearDaySuccessModal() {
+      const modal = document.getElementById('mealSuccessModal');
+      const body = document.body;
+      
+      // Prevenir scroll da página de fundo
+      body.style.overflow = 'hidden';
+      
+      // Atualizar mensagem
+      const title = modal.querySelector('.modal-title');
+      const message = modal.querySelector('.modal-message');
+      
+      title.textContent = 'Limpando Dia...';
+      message.textContent = 'Removendo todas as refeições do dia...';
+      
+      modal.style.display = 'flex';
+      
+      // Não fechar automaticamente - será fechado pela função de sucesso
+    }
+    
+    function showErrorModal(message) {
+      const modal = document.getElementById('errorModal');
+      const body = document.body;
+      
+      // Prevenir scroll da página de fundo
+      body.style.overflow = 'hidden';
+      
+      // Atualizar mensagem
+      const messageElement = modal.querySelector('#errorMessage');
+      messageElement.textContent = message;
+      
+      modal.style.display = 'flex';
+      
+      // Auto-fechar após 5 segundos
+      setTimeout(() => {
+        closeErrorModal();
+      }, 5000);
     }
     
     function editMeal(mealId) {
@@ -2300,26 +2685,56 @@
         return;
       }
       
+      // Validar nome da refeição
+      const mealName = document.getElementById('editMealName').value.trim();
+      if (!mealName) {
+        showErrorModal('Por favor, digite um nome para a refeição.');
+        return;
+      }
+      
       // Coletar todos os alimentos
       const container = document.getElementById('editFoodItemsContainer');
       const items = container.querySelectorAll('.food-item');
       const foods = [];
       
       console.log('DEBUG: Encontrados', items.length, 'itens .food-item');
+      console.log('DEBUG: Container:', container);
+      console.log('DEBUG: Items encontrados:', items);
       
       items.forEach((item, index) => {
+        console.log(`DEBUG: Processando item ${index}:`, item);
+        console.log(`DEBUG: HTML do item ${index}:`, item.outerHTML);
+        
         const foodSelect = item.querySelector('.food-select');
         const quantityInput = item.querySelector('.quantity-input');
         
         console.log(`DEBUG: Item ${index}:`, {
-          foodSelect: foodSelect ? foodSelect.value : 'não encontrado',
-          quantityInput: quantityInput ? quantityInput.value : 'não encontrado'
+          foodSelect: foodSelect,
+          quantityInput: quantityInput,
+          foodSelectValue: foodSelect ? foodSelect.value : 'não encontrado',
+          quantityInputValue: quantityInput ? quantityInput.value : 'não encontrado',
+          foodSelectExists: !!foodSelect,
+          quantityInputExists: !!quantityInput
         });
         
-        if (foodSelect && foodSelect.value && quantityInput && quantityInput.value) {
+        if (foodSelect && foodSelect.value && quantityInput && quantityInput.value && 
+            foodSelect.value.trim() !== '' && quantityInput.value.trim() !== '') {
+          console.log(`DEBUG: Adicionando alimento ${index}:`, {
+            food_id: foodSelect.value,
+            quantity: parseFloat(quantityInput.value)
+          });
           foods.push({
             food_id: foodSelect.value,
             quantity: parseFloat(quantityInput.value)
+          });
+        } else {
+          console.log(`DEBUG: Item ${index} não passou na validação:`, {
+            foodSelectExists: !!foodSelect,
+            foodSelectValue: foodSelect ? foodSelect.value : null,
+            foodSelectValueTrimmed: foodSelect ? foodSelect.value.trim() : null,
+            quantityInputExists: !!quantityInput,
+            quantityInputValue: quantityInput ? quantityInput.value : null,
+            quantityInputValueTrimmed: quantityInput ? quantityInput.value.trim() : null
           });
         }
       });
@@ -2327,8 +2742,8 @@
       console.log('DEBUG: Foods coletados:', foods);
       
       if (foods.length === 0) {
-        showErrorModal('Adicione pelo menos um alimento à refeição.');
-        return;
+        console.log('DEBUG: Refeição sem alimentos - permitindo edição');
+        // Permitir refeições sem alimentos
       }
       
       // Adicionar data atual
@@ -2357,6 +2772,12 @@
         console.log(`${key}: ${value}`);
       }
       
+      // Debug adicional
+      console.log('DEBUG: FormData keys:', Array.from(formData.keys()));
+      console.log('DEBUG: FormData values:', Array.from(formData.values()));
+      console.log('DEBUG: foods array length:', foods.length);
+      console.log('DEBUG: foods array content:', foods);
+      
       // Mostrar loading
       const submitBtn = document.querySelector('button[onclick="saveEditedMeal()"]');
       const originalText = submitBtn.textContent;
@@ -2365,7 +2786,7 @@
       
       // Enviar dados para o servidor
       fetch(`/inicio/api/meals/${mealId}/edit/`, {
-        method: 'PUT',
+        method: 'POST',
         body: formData,
         headers: {
           'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
@@ -2381,15 +2802,14 @@
                   .then(data => {
                     console.log('Response data:', data);
                     if (data.success) {
-                      // Mostrar modal de sucesso personalizado
-                      showMealSuccessModal();
+                      // Fechar modal de edição
+                      closeEditMealModal();
                       
-                      // Fechar modal de edição após sucesso
-                      setTimeout(() => {
-                        closeEditMealModal();
-                        // Recarregar página após fechar modal
-                        window.location.reload();
-                      }, 2000);
+                      // Mostrar modal de sucesso personalizado
+                      showMealSuccessModal('Refeição editada com sucesso!');
+                      
+                      // Definir flag para recarregar a página após fechar o modal de sucesso
+                      window.shouldReloadPage = true;
                     } else {
                       showErrorModal('Erro ao editar refeição: ' + data.error);
                     }
@@ -2420,14 +2840,14 @@
       // Adicionar cada alimento da refeição
       meal.items.forEach((item, index) => {
         console.log(`DEBUG: Adicionando item ${index}:`, item);
-        addFoodItemToEdit(item, index);
+        addFoodItemToEditWithData(item, index);
       });
       
       // Atualizar preview nutricional
       updateEditNutritionPreview();
     }
     
-    function addFoodItemToEdit(item, index) {
+    function addFoodItemToEditWithData(item, index) {
       const container = document.getElementById('editFoodItemsContainer');
       
       const newItem = document.createElement('div');
@@ -2466,7 +2886,7 @@
           <div class="quantity-input-group">
                         <input type="number" class="quantity-input" 
                    min="1" max="2000" value="${item.quantity}" required>
-            <button type="button" class="remove-food-btn" onclick="removeFoodItem(${index})">
+            <button type="button" class="remove-food-btn" onclick="removeFoodItemFromEdit(${index})">
               <i class="fas fa-trash"></i>
             </button>
           </div>
@@ -2484,7 +2904,7 @@
       addFoodItemEventListenersForEdit(index);
       
       // Mostrar botões de remoção se necessário
-      updateRemoveButtons();
+      updateRemoveButtonsEdit();
     }
     
     function openEditMealModal() {
@@ -2503,8 +2923,13 @@
     }
     
     function deleteMeal(mealId) {
+      console.log('DEBUG: deleteMeal chamada com mealId:', mealId);
+      console.log('DEBUG: tipo do mealId:', typeof mealId);
+      
       // Armazenar o ID da refeição para usar na confirmação
       window.currentMealToDelete = mealId;
+      
+      console.log('DEBUG: mealId armazenado em window.currentMealToDelete:', window.currentMealToDelete);
       
       // Mostrar modal de confirmação personalizado
       showDeleteConfirmModal();
@@ -2536,7 +2961,12 @@
     function confirmDeleteMeal() {
       const mealId = window.currentMealToDelete;
       
+      console.log('DEBUG: confirmDeleteMeal chamada');
+      console.log('DEBUG: mealId:', mealId);
+      console.log('DEBUG: tipo do mealId:', typeof mealId);
+      
       if (!mealId) {
+        console.log('DEBUG: mealId não encontrado, fechando modal');
         closeDeleteConfirmModal();
         return;
       }
@@ -2550,6 +2980,8 @@
       deleteBtn.textContent = 'Excluindo...';
       deleteBtn.disabled = true;
       
+      console.log('DEBUG: Fazendo requisição para excluir refeição:', mealId);
+      
       // Fazer requisição de exclusão
       fetch(`{% url 'delete_meal' 0 %}`.replace('0', mealId), {
         method: 'DELETE',
@@ -2557,22 +2989,25 @@
           'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
         }
       })
-      .then(response => response.json())
+      .then(response => {
+        console.log('DEBUG: Response status:', response.status);
+        return response.json();
+      })
       .then(data => {
+        console.log('DEBUG: Response data:', data);
         if (data.success) {
           // Mostrar modal de sucesso
           showMealSuccessModal();
           
-          // Recarregar página após sucesso
-          setTimeout(() => {
-            window.location.reload();
-          }, 2000);
+          // Definir flag para recarregar a página após fechar o modal de sucesso
+          window.shouldReloadPage = true;
         } else {
+          console.log('DEBUG: Erro na exclusão:', data.error);
           showErrorModal('Erro ao excluir refeição: ' + data.error);
         }
       })
       .catch(error => {
-        console.error('Erro:', error);
+        console.error('DEBUG: Erro na requisição:', error);
         showErrorModal('Erro ao excluir refeição. Tente novamente.');
       })
       .finally(() => {
@@ -2585,20 +3020,33 @@
     function testProgress() {
       console.log('=== TESTE DE PROGRESSO ===');
       
-      // Forçar valores de teste
-      document.getElementById('caloriesConsumed').textContent = '1000';
-      document.getElementById('carbsConsumed').textContent = '50';
-      document.getElementById('proteinConsumed').textContent = '30';
-      document.getElementById('fatConsumed').textContent = '20';
-      document.getElementById('fiberConsumed').textContent = '10';
+      // Verificar valores atuais
+      console.log('Valores atuais:');
+      console.log('  - Calorias consumidas:', document.getElementById('caloriesConsumed').textContent);
+      console.log('  - Carboidratos consumidos:', document.getElementById('carbsConsumed').textContent);
+      console.log('  - Proteínas consumidas:', document.getElementById('proteinConsumed').textContent);
+      console.log('  - Gorduras consumidas:', document.getElementById('fatConsumed').textContent);
+      console.log('  - Fibras consumidas:', document.getElementById('fiberConsumed').textContent);
       
-      console.log('Valores de teste aplicados');
+      // Forçar valores de teste (ultrapassando várias metas)
+      document.getElementById('caloriesConsumed').textContent = '3000'; // Ultrapassando meta de 2375
+      document.getElementById('carbsConsumed').textContent = '300'; // Ultrapassando meta de 267
+      document.getElementById('proteinConsumed').textContent = '200'; // Ultrapassando meta de 178
+      document.getElementById('fatConsumed').textContent = '100'; // Ultrapassando meta de 66
+      document.getElementById('fiberConsumed').textContent = '50'; // Ultrapassando meta de 30
+      
+      console.log('Valores de teste aplicados (ultrapassando várias metas):');
+      console.log('  - Calorias: 3000/2375 (+625)');
+      console.log('  - Carboidratos: 300/267 (+33)');
+      console.log('  - Proteínas: 200/178 (+22)');
+      console.log('  - Gorduras: 100/66 (+34)');
+      console.log('  - Fibras: 50/30 (+20)');
       
       // Atualizar progressos
       updateProgressCircle();
       updateMacroProgress();
       
-      console.log('Progressos atualizados');
+      console.log('Progressos atualizados - círculo deve estar VERMELHO e cards devem mostrar ultrapassagem!');
     }
   </script>
 </body>

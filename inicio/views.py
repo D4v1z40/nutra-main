@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
-from datetime import date, timedelta
+from datetime import date
 import json
 import random
 import string
@@ -103,35 +103,74 @@ def register(request):
 
 @login_required
 def perfil(request):
-    # Obter ou criar perfil do usuário
-    profile, created = UserProfile.objects.get_or_create(user=request.user)
+    try:
+        print(f"DEBUG: Iniciando view perfil para usuário {request.user}")
 
-    print(f"DEBUG: Carregando perfil para usuário {request.user}")
-    print(f"DEBUG: first_name atual: {request.user.first_name}")
-    print(f"DEBUG: phone atual: {profile.phone}")
+        # Obter ou criar perfil do usuário
+        profile, created = UserProfile.objects.get_or_create(user=request.user)
+        print(f"DEBUG: Profile criado: {created}, Profile ID: {profile.id}")
 
-    # Calcular metas apenas se o perfil foi criado agora (não sobrescrever metas existentes)
-    if created:
-        try:
-            profile.daily_calories = profile.calculate_daily_calories()
-            protein, carbs, fat = profile.calculate_macros()
-            profile.protein_goal = protein
-            profile.carbs_goal = carbs
-            profile.fat_goal = fat
-            profile.save()
-        except Exception as e:
-            # Se houver erro no cálculo, usar valores padrão
-            profile.daily_calories = 2000
-            profile.protein_goal = 150
-            profile.carbs_goal = 250
-            profile.fat_goal = 67
-            profile.save()
+        print(f"DEBUG: Username atual: {request.user.username}")
+        print(f"DEBUG: Height atual: {profile.height}")
+        print(f"DEBUG: Weight atual: {profile.weight}")
+        print(f"DEBUG: Photo atual: {profile.profile_photo}")
 
-    return render(request, 'perfil.html', {
-        'user': request.user,
-        'profile': profile,
-        'timestamp': int(time.time())
-    })
+        if profile.profile_photo:
+            print(f"DEBUG: Photo URL: {profile.profile_photo.url}")
+
+        # Forçar refresh dos dados do banco
+        profile.refresh_from_db()
+        request.user.refresh_from_db()
+
+        print(f"DEBUG: Após refresh - Username: {request.user.username}")
+        print(f"DEBUG: Após refresh - Height: {profile.height}")
+        print(f"DEBUG: Após refresh - Weight: {profile.weight}")
+        print(f"DEBUG: Após refresh - Photo: {profile.profile_photo}")
+
+        # Calcular metas apenas se o perfil foi criado agora (não sobrescrever metas existentes)
+        if created:
+            try:
+                profile.daily_calories = profile.calculate_daily_calories()
+                protein, carbs, fat = profile.calculate_macros()
+                profile.protein_goal = protein
+                profile.carbs_goal = carbs
+                profile.fat_goal = fat
+                profile.save()
+            except Exception as e:
+                print(f"DEBUG: Erro ao calcular metas: {e}")
+                # Se houver erro no cálculo, usar valores padrão
+                profile.daily_calories = 2000
+                profile.protein_goal = 150
+                profile.carbs_goal = 250
+                profile.fat_goal = 67
+                profile.save()
+
+        # Debug: verificar dados antes de enviar para o template
+        print(f"DEBUG: Dados enviados para o template:")
+        print(f"  - user.username: {request.user.username}")
+        print(f"  - profile.height: {profile.height}")
+        print(f"  - profile.weight: {profile.weight}")
+        print(f"  - profile.profile_photo: {profile.profile_photo}")
+        print(
+            f"  - profile.profile_photo.url: {profile.profile_photo.url if profile.profile_photo else None}")
+
+        return render(request, 'perfil.html', {
+            'user': request.user,
+            'profile': profile,
+            'timestamp': int(time.time())
+        })
+
+    except Exception as e:
+        print(f"DEBUG: ERRO na view perfil: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        # Retornar página de erro ou redirecionar
+        return render(request, 'perfil.html', {
+            'user': request.user,
+            'profile': None,
+            'timestamp': int(time.time()),
+            'error': str(e)
+        })
 
 
 @login_required
@@ -152,6 +191,130 @@ def configuracoes(request):
 @login_required
 def alterar_senha(request):
     return render(request, 'alterar_senha.html')
+
+
+@login_required
+@csrf_exempt
+@require_http_methods(["POST"])
+def update_basic_profile(request):
+    """Atualiza dados básicos do perfil do usuário"""
+    try:
+        print(
+            f"DEBUG: Iniciando atualização de perfil para usuário {request.user}")
+        profile, created = UserProfile.objects.get_or_create(user=request.user)
+
+        # Processar dados do formulário
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            print("DEBUG: Processando FormData")
+
+            # Atualizar username
+            if 'username' in request.POST and request.POST['username']:
+                new_username = request.POST['username'].strip()
+                if new_username and new_username != request.user.username:
+                    request.user.username = new_username
+                    request.user.save()
+                    print(f"DEBUG: Username atualizado para: {new_username}")
+
+            # Atualizar altura
+            if 'height' in request.POST and request.POST['height']:
+                try:
+                    new_height = int(request.POST['height'])
+                    if new_height > 0:
+                        profile.height = new_height
+                        print(f"DEBUG: Height atualizado para: {new_height}")
+                except ValueError:
+                    print(
+                        f"DEBUG: Erro ao converter height: {request.POST['height']}")
+
+            # Atualizar peso
+            if 'weight' in request.POST and request.POST['weight']:
+                try:
+                    new_weight = float(request.POST['weight'])
+                    if new_weight > 0:
+                        profile.weight = new_weight
+                        print(f"DEBUG: Weight atualizado para: {new_weight}")
+                except ValueError:
+                    print(
+                        f"DEBUG: Erro ao converter weight: {request.POST['weight']}")
+
+            # Processar foto
+            if 'profile_photo' in request.FILES and request.FILES['profile_photo']:
+                profile_photo = request.FILES['profile_photo']
+                profile.profile_photo = profile_photo
+                print(f"DEBUG: Foto atualizada: {profile_photo.name}")
+            elif 'remove_photo' in request.POST and request.POST['remove_photo'] == 'true':
+                profile.profile_photo = None
+                print(f"DEBUG: Foto removida")
+            # Se não há nova foto e não foi solicitada remoção, manter a foto atual
+            else:
+                print(f"DEBUG: Mantendo foto atual: {profile.profile_photo}")
+
+        else:
+            print("DEBUG: Processando JSON")
+            data = json.loads(request.body)
+
+            # Atualizar username
+            if 'username' in data and data['username']:
+                new_username = data['username'].strip()
+                if new_username and new_username != request.user.username:
+                    request.user.username = new_username
+                    request.user.save()
+                    print(f"DEBUG: Username atualizado para: {new_username}")
+
+            # Atualizar altura
+            if 'height' in data and data['height']:
+                try:
+                    new_height = int(data['height'])
+                    if new_height > 0:
+                        profile.height = new_height
+                        print(f"DEBUG: Height atualizado para: {new_height}")
+                except ValueError:
+                    print(f"DEBUG: Erro ao converter height: {data['height']}")
+
+            # Atualizar peso
+            if 'weight' in data and data['weight']:
+                try:
+                    new_weight = float(data['weight'])
+                    if new_weight > 0:
+                        profile.weight = new_weight
+                        print(f"DEBUG: Weight atualizado para: {new_weight}")
+                except ValueError:
+                    print(f"DEBUG: Erro ao converter weight: {data['weight']}")
+
+            # Remover foto se solicitado
+            if 'remove_photo' in data and data['remove_photo']:
+                profile.profile_photo = None
+                print(f"DEBUG: Foto removida")
+            # Se não foi solicitada remoção, manter a foto atual
+            else:
+                print(f"DEBUG: Mantendo foto atual: {profile.profile_photo}")
+
+        # Salvar alterações
+        profile.save()
+        request.user.save()
+
+        print(f"DEBUG: Perfil salvo com sucesso!")
+        print(f"DEBUG: Username: {request.user.username}")
+        print(f"DEBUG: Height: {profile.height}")
+        print(f"DEBUG: Weight: {profile.weight}")
+        print(f"DEBUG: Photo: {profile.profile_photo}")
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Perfil atualizado com sucesso!',
+            'profile': {
+                'username': request.user.username,
+                'height': profile.height,
+                'weight': float(profile.weight) if profile.weight else None,
+                'photo_url': profile.profile_photo.url if profile.profile_photo else None
+            }
+        })
+
+    except Exception as e:
+        print(f"DEBUG: Erro ao atualizar perfil: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'success': False, 'error': str(e)})
 
 
 @login_required
@@ -200,72 +363,6 @@ def change_password(request):
         })
 
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
-
-
-@login_required
-@csrf_exempt
-@require_http_methods(["POST"])
-def update_personal_data(request):
-    """Atualiza os dados pessoais do usuário"""
-    try:
-        print(f"DEBUG: Atualizando dados pessoais para usuário {request.user}")
-        print(f"DEBUG: POST data: {request.POST}")
-
-        phone = request.POST.get('phone')
-        full_name = request.POST.get('full_name')
-        username = request.POST.get('username')
-
-        print(
-            f"DEBUG: Phone: '{phone}', Full name: '{full_name}', Username: '{username}'")
-        print(
-            f"DEBUG: Phone type: {type(phone)}, Phone length: {len(phone) if phone else 0}")
-
-        # Atualizar nome
-        if full_name:
-            print(f"DEBUG: Atualizando first_name para: {full_name}")
-            request.user.first_name = full_name
-            request.user.save()
-            print(f"DEBUG: first_name salvo: {request.user.first_name}")
-
-        # Atualizar username se fornecido
-        if username:
-            print(f"DEBUG: Atualizando username para: {username}")
-            request.user.username = username
-            request.user.save()
-            print(f"DEBUG: username salvo: {request.user.username}")
-
-        # Atualizar telefone no perfil
-        profile, created = UserProfile.objects.get_or_create(user=request.user)
-        print(
-            f"DEBUG: Profile criado: {created}, Phone atual: {profile.phone}")
-
-        if phone:
-            print(f"DEBUG: Atualizando phone para: '{phone}'")
-            profile.phone = phone
-        else:
-            print(
-                f"DEBUG: Phone vazio, mantendo valor atual: '{profile.phone}'")
-
-        profile.save()
-        print(f"DEBUG: Profile salvo - phone: '{profile.phone}'")
-
-        # Verificar se foi salvo corretamente
-        profile.refresh_from_db()
-        print(f"DEBUG: Phone após refresh: '{profile.phone}'")
-
-        return JsonResponse({
-            'success': True,
-            'message': 'Dados pessoais atualizados com sucesso!',
-            'profile': {
-                'first_name': request.user.first_name,
-                'username': request.user.username,
-                'phone': profile.phone
-            }
-        })
-
-    except Exception as e:
-        print(f"DEBUG: Erro ao atualizar dados pessoais: {str(e)}")
         return JsonResponse({'success': False, 'error': str(e)})
 
 
@@ -341,13 +438,31 @@ def dieta(request):
 
     # Calcular totais das refeições com tratamento de erro
     try:
+        print(f"DEBUG: Calculando totais para {len(meals)} refeições")
         total_calories = sum(meal.get_total_calories() for meal in meals)
         total_protein = sum(meal.get_total_protein() for meal in meals)
         total_carbs = sum(meal.get_total_carbs() for meal in meals)
         total_fat = sum(meal.get_total_fat() for meal in meals)
         total_fiber = sum(meal.get_total_fiber() for meal in meals)
         total_cost = sum(meal.get_total_cost() for meal in meals)
+
+        print(f"DEBUG: Totais calculados:")
+        print(f"  - Calorias: {total_calories}")
+        print(f"  - Proteínas: {total_protein}")
+        print(f"  - Carboidratos: {total_carbs}")
+        print(f"  - Gorduras: {total_fat}")
+        print(f"  - Fibras: {total_fiber}")
+
+        # Debug individual das refeições
+        for meal in meals:
+            print(
+                f"DEBUG: Refeição '{meal.name}' - Calorias: {meal.get_total_calories()}, Proteínas: {meal.get_total_protein()}")
+            for item in meal.mealitem_set.all():
+                print(
+                    f"  - {item.food.name} ({item.quantity}g): {item.get_calories()} kcal, {item.get_protein()}g proteína")
+
     except Exception as e:
+        print(f"DEBUG: Erro ao calcular totais: {e}")
         # Se houver erro nos cálculos, usar valores padrão
         total_calories = 0
         total_protein = 0
@@ -376,6 +491,12 @@ def dieta(request):
         'total_fat': total_fat,
         'total_fiber': total_fiber,
         'total_cost': total_cost,
+        # Adicionar variáveis com nomes que o template espera
+        'total_calories_consumed': total_calories,
+        'total_protein_consumed': total_protein,
+        'total_carbs_consumed': total_carbs,
+        'total_fat_consumed': total_fat,
+        'total_fiber_consumed': total_fiber,
     }
 
     return render(request, 'dieta.html', context)
@@ -403,180 +524,6 @@ def logout_view(request):
 
 
 # APIs para o sistema de dieta
-
-@login_required
-@csrf_exempt
-@require_http_methods(["POST"])
-def update_profile(request):
-    """Atualiza o perfil do usuário"""
-    try:
-        print(f"DEBUG: Content-Type: {request.content_type}")
-        print(f"DEBUG: POST data: {request.POST}")
-        print(f"DEBUG: FILES data: {request.FILES}")
-
-        profile, created = UserProfile.objects.get_or_create(user=request.user)
-
-        # Verificar se é um FormData (upload de arquivo) ou JSON
-        photo_url = None
-        if request.content_type and 'multipart/form-data' in request.content_type:
-            # Tratar FormData para upload de foto (se houver)
-            if 'profile_photo' in request.FILES and request.FILES['profile_photo']:
-                profile_photo = request.FILES['profile_photo']
-                print(
-                    f"DEBUG: Upload de foto: {profile_photo.name}, tamanho: {profile_photo.size}")
-                # Salvar a foto de perfil
-                profile.profile_photo = profile_photo
-                profile.save()  # Salvar imediatamente para gerar a URL
-                photo_url = profile.profile_photo.url if profile.profile_photo else None
-                print(f"DEBUG: Foto salva com URL: {photo_url}")
-            else:
-                print(f"DEBUG: Nenhuma foto enviada")
-
-            # Atualizar campos do perfil
-            if 'full_name' in request.POST:
-                print(
-                    f"DEBUG: Atualizando full_name: {request.POST['full_name']}")
-                request.user.first_name = request.POST['full_name']
-                request.user.save()
-
-            if 'username' in request.POST:
-                print(
-                    f"DEBUG: Atualizando username: {request.POST['username']}")
-                request.user.username = request.POST['username']
-                request.user.save()
-
-            if 'birth_date' in request.POST and request.POST['birth_date']:
-                print(
-                    f"DEBUG: Atualizando birth_date: {request.POST['birth_date']}")
-                from datetime import datetime
-                try:
-                    birth_date = datetime.strptime(
-                        request.POST['birth_date'], '%Y-%m-%d').date()
-                    profile.birth_date = birth_date
-                except ValueError:
-                    print(
-                        f"DEBUG: Erro ao converter birth_date: {request.POST['birth_date']}")
-                    pass
-
-            if 'gender' in request.POST:
-                print(f"DEBUG: Atualizando gender: {request.POST['gender']}")
-                profile.gender = request.POST['gender']
-
-            if 'height' in request.POST and request.POST['height']:
-                print(f"DEBUG: Atualizando height: {request.POST['height']}")
-                try:
-                    profile.height = int(request.POST['height'])
-                except ValueError:
-                    print(
-                        f"DEBUG: Erro ao converter height: {request.POST['height']}")
-                    pass
-
-            if 'weight' in request.POST and request.POST['weight']:
-                print(f"DEBUG: Atualizando weight: {request.POST['weight']}")
-                try:
-                    profile.weight = float(request.POST['weight'])
-                except ValueError:
-                    print(
-                        f"DEBUG: Erro ao converter weight: {request.POST['weight']}")
-                    pass
-
-            if 'objective' in request.POST:
-                print(
-                    f"DEBUG: Atualizando objective: {request.POST['objective']}")
-                profile.objective = request.POST['objective']
-
-            # Processar dados pessoais (telefone apenas - email não pode ser alterado)
-            # Email não é processado pois o campo está readonly
-
-            if 'phone' in request.POST:
-                profile.phone = request.POST['phone']
-        else:
-            # Tratar JSON para atualização de metas
-            data = json.loads(request.body)
-
-            # Atualizar campos básicos
-            if 'first_name' in data:
-                request.user.first_name = data['first_name']
-                request.user.save()
-
-            if 'birth_date' in data:
-                profile.birth_date = data['birth_date']
-
-            if 'height' in data:
-                profile.height = data['height']
-
-            if 'weight' in data:
-                profile.weight = data['weight']
-
-            if 'objective' in data:
-                profile.objective = data['objective']
-
-            # Atualizar metas manualmente se fornecidas
-            if 'daily_calories' in data:
-                profile.daily_calories = data['daily_calories']
-
-            if 'protein_goal' in data:
-                profile.protein_goal = data['protein_goal']
-
-            if 'carbs_goal' in data:
-                profile.carbs_goal = data['carbs_goal']
-
-            if 'fat_goal' in data:
-                profile.fat_goal = data['fat_goal']
-
-        # Recalcular metas se necessário
-        if profile.height and profile.weight and profile.objective:
-            profile.daily_calories = profile.calculate_daily_calories()
-            protein, carbs, fat = profile.calculate_macros()
-            profile.protein_goal = protein
-            profile.carbs_goal = carbs
-            profile.fat_goal = fat
-
-        print(f"DEBUG: Salvando perfil...")
-        print(f"DEBUG: Dados antes do save:")
-        print(f"  - first_name: {request.user.first_name}")
-        print(f"  - username: {request.user.username}")
-        print(f"  - height: {profile.height}")
-        print(f"  - weight: {profile.weight}")
-        print(f"  - gender: {profile.gender}")
-        print(f"  - objective: {profile.objective}")
-        print(f"  - birth_date: {profile.birth_date}")
-
-        profile.save()
-        request.user.save()
-        print(f"DEBUG: Perfil e usuário salvos com sucesso!")
-
-        # Debug: verificar se a foto foi salva
-        final_photo_url = None
-        if hasattr(profile, 'profile_photo') and profile.profile_photo:
-            final_photo_url = profile.profile_photo.url
-            print(f"DEBUG: Foto salva com URL: {final_photo_url}")
-        elif photo_url:
-            final_photo_url = photo_url
-            print(f"DEBUG: Foto URL do upload: {final_photo_url}")
-        else:
-            print(f"DEBUG: Nenhuma foto encontrada")
-
-        return JsonResponse({
-            'success': True,
-            'message': 'Perfil atualizado com sucesso!',
-            'profile': {
-                'username': request.user.username,
-                'first_name': request.user.first_name,
-                'birth_date': profile.birth_date.isoformat() if profile.birth_date else None,
-                'height': profile.height,
-                'weight': float(profile.weight) if profile.weight else None,
-                'objective': profile.objective,
-                'daily_calories': profile.daily_calories,
-                'protein_goal': profile.protein_goal,
-                'carbs_goal': profile.carbs_goal,
-                'fat_goal': profile.fat_goal,
-                'photo_url': final_photo_url
-            }
-        })
-
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
 
 
 @login_required
@@ -644,11 +591,19 @@ def search_foods(request):
 @require_http_methods(["DELETE"])
 def delete_meal(request, meal_id):
     """Remove uma refeição"""
+    print(f"DEBUG: delete_meal chamada com meal_id: {meal_id}")
+    print(f"DEBUG: tipo do meal_id: {type(meal_id)}")
+    print(f"DEBUG: usuário: {request.user}")
+
     try:
         meal = Meal.objects.get(id=meal_id, user=request.user)
+        print(f"DEBUG: Refeição encontrada: {meal.name} (ID: {meal.id})")
         meal.delete()
+        print("DEBUG: Refeição excluída com sucesso")
         return JsonResponse({'success': True})
     except Meal.DoesNotExist:
+        print(
+            f"DEBUG: Refeição com ID {meal_id} não encontrada para o usuário {request.user}")
         return JsonResponse({'success': False, 'error': 'Refeição não encontrada'})
 
 
@@ -662,8 +617,18 @@ def get_meal(request, meal_id):
 
         # Buscar itens da refeição
         items = []
-        for item in meal.mealitem_set.all():
-            print(f"DEBUG: Nome do alimento no banco: '{item.food.name}'")
+        meal_items = meal.mealitem_set.all()
+        print(
+            f"DEBUG: Encontrados {meal_items.count()} itens na refeição {meal_id}")
+        print(f"DEBUG: Query SQL: {meal_items.query}")
+        print(f"DEBUG: Usuário da refeição: {meal.user}")
+        print(f"DEBUG: Usuário da requisição: {request.user}")
+        print(
+            f"DEBUG: Refeição pertence ao usuário: {meal.user == request.user}")
+
+        for item in meal_items:
+            print(
+                f"DEBUG: Item encontrado - ID: {item.id}, Nome: '{item.food.name}', Quantidade: {item.quantity}")
 
             # Mapear nome do alimento para food_id (string)
             food_name_to_id = {
@@ -720,7 +685,7 @@ def get_meal(request, meal_id):
 
 @login_required
 @csrf_exempt
-@require_http_methods(["PUT"])
+@require_http_methods(["POST"])
 def edit_meal(request, meal_id):
     """Edita uma refeição existente"""
     try:
@@ -733,8 +698,13 @@ def edit_meal(request, meal_id):
         meal_name = request.POST.get('meal_name', meal.name)
         foods_json = request.POST.get('foods', '[]')
 
+        print(f"DEBUG: request.POST completo: {dict(request.POST)}")
+        print(f"DEBUG: request.method: {request.method}")
+        print(f"DEBUG: request.content_type: {request.content_type}")
         print(f"DEBUG: Nome da refeição: {meal_name}")
         print(f"DEBUG: Foods JSON: {foods_json}")
+        print(f"DEBUG: Tipo do foods_json: {type(foods_json)}")
+        print(f"DEBUG: Tamanho do foods_json: {len(foods_json)}")
 
         try:
             foods = json.loads(foods_json)
@@ -743,10 +713,18 @@ def edit_meal(request, meal_id):
             return JsonResponse({'success': False, 'error': 'Dados de alimentos inválidos'})
 
         if not foods:
-            print("DEBUG: Nenhum alimento fornecido")
-            return JsonResponse({'success': False, 'error': 'Adicione pelo menos um alimento'})
+            print("DEBUG: Nenhum alimento fornecido - permitindo refeição vazia")
+            # Permitir refeições sem alimentos
+            meal.name = meal_name
+            meal.save()
+
+            # Remover todos os itens existentes
+            meal.mealitem_set.all().delete()
+            print("DEBUG: Refeição vazia salva com sucesso")
+            return JsonResponse({'success': True, 'message': 'Refeição editada com sucesso!'})
 
         print(f"DEBUG: {len(foods)} alimentos para processar")
+        print(f"DEBUG: Foods recebidos: {foods}")
 
         # Atualizar nome da refeição
         meal.name = meal_name
@@ -783,9 +761,11 @@ def edit_meal(request, meal_id):
         for food_item in foods:
             food_id = food_item['food_id']
             quantity = float(food_item['quantity'])
+            print(f"DEBUG: Processando alimento: {food_id} - {quantity}g")
 
             if food_id in food_data:
                 food_info = food_data[food_id]
+                print(f"DEBUG: Dados do alimento encontrados: {food_info}")
 
                 # Criar ou buscar alimento
                 food, created = Food.objects.get_or_create(
@@ -798,17 +778,29 @@ def edit_meal(request, meal_id):
                         'fiber_per_100g': food_info['fiber']
                     }
                 )
+                print(
+                    f"DEBUG: Alimento {'criado' if created else 'encontrado'}: {food.name}")
 
                 # Criar item da refeição
-                MealItem.objects.create(
+                meal_item = MealItem.objects.create(
                     meal=meal,
                     food=food,
                     quantity=quantity
                 )
                 print(
-                    f"DEBUG: Criado item - {food_info['name']} ({quantity}g)")
+                    f"DEBUG: Criado item - {food_info['name']} ({quantity}g) - ID: {meal_item.id}")
+            else:
+                print(
+                    f"DEBUG: ERRO - Alimento {food_id} não encontrado no food_data")
 
         print("DEBUG: Todos os itens criados com sucesso")
+
+        # Verificar se os itens foram realmente criados
+        meal_items_after = meal.mealitem_set.all()
+        print(f"DEBUG: Itens após criação: {meal_items_after.count()}")
+        for item in meal_items_after:
+            print(f"DEBUG: Item criado - {item.food.name} ({item.quantity}g)")
+
         return JsonResponse({'success': True, 'message': 'Refeição editada com sucesso!'})
 
     except Meal.DoesNotExist:
@@ -1119,9 +1111,56 @@ def reset_password(request):
 
 @login_required
 @require_http_methods(["POST"])
+def clear_day(request):
+    """Limpar todas as refeições do dia"""
+    try:
+        print(f"DEBUG: Limpando dia para usuário {request.user.username}")
+
+        # Obter data do formulário ou usar hoje
+        date_str = request.POST.get('date', '')
+        if not date_str:
+            selected_date = date.today()
+        else:
+            try:
+                selected_date = date.fromisoformat(date_str)
+            except (ValueError, TypeError):
+                selected_date = date.today()
+
+        print(f"DEBUG: Data selecionada: {selected_date}")
+
+        # Buscar todas as refeições do usuário para a data
+        meals = Meal.objects.filter(user=request.user, date=selected_date)
+        meal_count = meals.count()
+
+        print(f"DEBUG: Encontradas {meal_count} refeições para deletar")
+
+        # Deletar todas as refeições (cascade deletará os MealItems automaticamente)
+        deleted_count = meals.delete()[0]
+
+        print(f"DEBUG: {deleted_count} refeições deletadas com sucesso")
+
+        return JsonResponse({
+            'success': True,
+            'message': f'{deleted_count} refeições removidas com sucesso!',
+            'deleted_count': deleted_count
+        })
+
+    except Exception as e:
+        print(f"DEBUG: Erro ao limpar dia: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': f'Erro ao limpar dia: {str(e)}'
+        })
+
+
+@login_required
+@require_http_methods(["POST"])
 def update_goals(request):
     """Atualizar metas diárias do usuário"""
     try:
+        print(f"DEBUG: Atualizando metas para usuário {request.user.username}")
+        print(f"DEBUG: request.POST = {request.POST}")
+
         # Obter ou criar perfil do usuário
         profile, created = UserProfile.objects.get_or_create(user=request.user)
 
@@ -1130,6 +1169,10 @@ def update_goals(request):
         protein_goal = int(request.POST.get('protein_goal', 150))
         carbs_goal = int(request.POST.get('carbs_goal', 250))
         fat_goal = int(request.POST.get('fat_goal', 67))
+        fiber_goal = int(request.POST.get('fiber_goal', 30))
+
+        print(
+            f"DEBUG: Valores extraídos - Calorias: {daily_calories}, Proteínas: {protein_goal}, Carboidratos: {carbs_goal}, Gorduras: {fat_goal}, Fibras: {fiber_goal}")
 
         # Validar valores
         if daily_calories < 1000 or daily_calories > 5000:
@@ -1156,19 +1199,30 @@ def update_goals(request):
                 'error': 'Gorduras devem estar entre 30 e 150g'
             })
 
+        if fiber_goal < 10 or fiber_goal > 100:
+            return JsonResponse({
+                'success': False,
+                'error': 'Fibras devem estar entre 10 e 100g'
+            })
+
         # Atualizar perfil
         profile.daily_calories = daily_calories
         profile.protein_goal = protein_goal
         profile.carbs_goal = carbs_goal
         profile.fat_goal = fat_goal
+        profile.fiber_goal = fiber_goal
         profile.save()
+
+        print(
+            f"DEBUG: Perfil salvo com sucesso - Calorias: {profile.daily_calories}, Fibras: {profile.fiber_goal}")
 
         return JsonResponse({
             'success': True,
             'daily_calories': daily_calories,
             'protein_goal': protein_goal,
             'carbs_goal': carbs_goal,
-            'fat_goal': fat_goal
+            'fat_goal': fat_goal,
+            'fiber_goal': fiber_goal
         })
 
     except ValueError as e:
@@ -1192,7 +1246,18 @@ def add_meal(request):
         # Obter dados do formulário
         meal_name = request.POST.get('meal_name', '').strip()
         foods_json = request.POST.get('foods', '[]')
-        meal_date = request.POST.get('date', date.today().isoformat())
+        meal_date_str = request.POST.get('date', '')
+
+        # Validar e converter data
+        if not meal_date_str:
+            meal_date = date.today()
+        else:
+            try:
+                meal_date = date.fromisoformat(meal_date_str)
+            except (ValueError, TypeError):
+                print(
+                    f"DEBUG: Data inválida recebida: '{meal_date_str}', usando data atual")
+                meal_date = date.today()
 
         # Validar dados
         if not meal_name:
@@ -1210,9 +1275,15 @@ def add_meal(request):
             })
 
         if not foods:
+            # Permitir refeições sem alimentos
+            meal = Meal.objects.create(
+                user=request.user,
+                name=meal_name,
+                date=meal_date
+            )
             return JsonResponse({
-                'success': False,
-                'error': 'Adicione pelo menos um alimento'
+                'success': True,
+                'message': 'Refeição criada com sucesso!'
             })
 
         # Dados nutricionais dos alimentos (por 100g)
@@ -1238,12 +1309,6 @@ def add_meal(request):
             'lentilha_cozida': {'name': 'Lentilha cozida', 'calories': 116, 'protein': 9, 'carbs': 20, 'fat': 0.4, 'fiber': 7.9},
             'abacate': {'name': 'Abacate', 'calories': 160, 'protein': 2, 'carbs': 8.5, 'fat': 14.7, 'fiber': 6.7},
         }
-
-        # Converter data
-        try:
-            meal_date = date.fromisoformat(meal_date)
-        except:
-            meal_date = date.today()
 
         # Criar nova refeição (sempre criar nova)
         meal = Meal.objects.create(

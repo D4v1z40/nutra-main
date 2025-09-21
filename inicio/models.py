@@ -26,12 +26,12 @@ class UserProfile(models.Model):
     ]
     gender = models.CharField(
         max_length=1, choices=GENDER_CHOICES, default='M', help_text="Gênero para cálculos metabólicos")
-    
+
     # Foto de perfil
     profile_photo = models.ImageField(
-        upload_to='profile_photos/', 
-        null=True, 
-        blank=True, 
+        upload_to='profile_photos/',
+        null=True,
+        blank=True,
         help_text='Foto de perfil do usuário'
     )
 
@@ -43,6 +43,8 @@ class UserProfile(models.Model):
         default=250, help_text="Carboidratos em gramas")
     fat_goal = models.PositiveIntegerField(
         default=67, help_text="Gorduras em gramas")
+    fiber_goal = models.PositiveIntegerField(
+        default=30, help_text="Fibras em gramas")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -78,7 +80,7 @@ class UserProfile(models.Model):
     def calculate_daily_calories(self):
         """Calcula as calorias diárias baseadas no objetivo"""
         bmr = self.calculate_bmr()
-        
+
         # Se não conseguir calcular BMR, usar valor padrão
         if bmr == 0:
             return 2000
